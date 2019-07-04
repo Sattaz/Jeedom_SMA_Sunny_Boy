@@ -1,15 +1,14 @@
 Description 
 ===
 
-Plugin servant de base pour les plugins. Attention lors de l’utilisation
-à bien remplacer tous les templates par l’id de votre plugin.
+Le plugin SMA-SunnyBoy permet de récupérer les informations de production photovoltaïque des onduleurs SMA de type Sunny Boy.
+En application courante, il permet par exemple d'allumer ou d'éteindre un équipement en fonction de la puissance réelle générée par votre installation PV depuis un scénario dans Jeedom.
 
-Création plugin partie 1 : l’arborescence 
+Configuration du plugin : 
 ===
 
-Voici sa structure: tout d’abord un dossier du nom de votre plugin (son
-identifiant unique plus exactement) qui doit contenir les sous-dossiers
-suivants :
+La configuration du plugin est très simple.
+Une fois installé, il suffit de créer un nouvel équipement et de le configurer de la manière suivantes:
 
 ![SunnyBoy](/Pictures/SMA_SunnyBoy_2.jpg)
 
