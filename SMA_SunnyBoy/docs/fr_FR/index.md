@@ -11,6 +11,8 @@ Voici sa structure: tout d’abord un dossier du nom de votre plugin (son
 identifiant unique plus exactement) qui doit contenir les sous-dossiers
 suivants :
 
+![SunnyBoy](/Pictures/SMA_SunnyBoy_2.jpg)
+
 -   3rdparty : dossier contenant les librairies externes utilisées dans
     le plugin (exemple pour le plugin SMS une librairie pour la
     communication série en php)
