@@ -2,6 +2,7 @@ Description
 ===
 
 Le plugin SMA-SunnyBoy permet de récupérer les informations de production photovoltaïque des onduleurs SMA de type Sunny Boy.
+
 En application courante, il permet par exemple d'allumer ou d'éteindre un équipement en fonction de la puissance réelle générée par votre installation PV depuis un scénario dans Jeedom.
 
 Configuration du plugin : 
@@ -12,88 +13,21 @@ Une fois installé, il suffit de créer un nouvel équipement et de le configure
 
 ![SunnyBoy](/Pictures/SMA_SunnyBoy_2.jpg)
 
--   3rdparty : dossier contenant les librairies externes utilisées dans
-    le plugin (exemple pour le plugin SMS une librairie pour la
-    communication série en php)
+Comme pour chaque plugin Jeedom, il faudra indiquer le 'Nom de l'équipement', un 'Objet parent' et une 'Catégorie'.
+Ne pas oublier de cocher les cases 'Activer' et 'Visible'.
 
--   core : dossier contenant tous les fichiers de fonctionnement interne
+Puis viennent aussi quelques paramètres dédiés aux spécification de l'onduleur SMA:
 
--   class : dossier contenant la classe du plugin
+-   IP de l'onduleur : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'onduleur.
 
--   php : dossier pouvant contenir des fonctions ne devant pas forcément
-    appartenir à une classe (souvent utilisé pour permettre l’inclusion
-    de multiples classes ou fichiers de configuration en une fois)
+-   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'Web§Connect' de l'onduleur.
 
--   config : fichier de configuration du plugin
+-   Puissance crête : veuillez renseigner la puissance de votre installation photovoltaïque (en watts)
 
--   ajax : dossier contenant les fichiers cibles d’appels AJAX
+-> Veuillez dès à présent appuyer sur le bouton 'Sauvegarder' afin d'enregistrer la configuration.
+-> Cette action va automatiquement créer les commandes de l'équipement.
 
--   desktop : dossier contenant la vue "bureau" du plugin (en opposition
-    avec la vue "mobile")
-
-    -   js : dossier contenant tous les fichiers de type javascript
-
-    -   php : dossier contenant tous les fichiers de type php qui font
-        de l’affichage
-
-    -   css : il n’y en pas ici mais, si besoin, tous les fichiers css
-        du plugin vont dedans
-
-    -   modal : dossier contenant le code des modals du plugin
-
--   plugin\_info : contient les fichiers permettant à Jeedom de
-    qualifier le plugin, de faire son installation et sa configuration
-
-    -   info.xml : fichier contenant les informations de base du plugin
-        (il est obligatoire sinon Jeedom ne verra pas le plugin), il
-        contient entre autre l’identifiant du module, la description,
-        les instructions d’installation…​
-
-    -   install.php : fichier contenant (si besoin) les méthodes
-        d’installation et de désinstallation du plugin
-
-    -   configuration.php : fichier contenant les paramètres à
-        configurer du plugin indépendants des équipements de celui-ci
-        (exemple pour le module Zwave l’ip du Raspberry Pi ayant la
-        carte Razberry)
-
--   doc : doit contenir la doc du plugin au format asciidoc, la racine
-    et le fichier index.asciidoc. Toutes les images sont
-    dans doc/images. La doc elle-même est dans un dossier en fonction de
-    la langue (ex en francais : doc/fr\_FR)
-
-Pour ce qui est de la convention de nommage des fichiers voici les
-impératifs :
-
--   les fichiers de class php doivent obligatoirement se finir par
-    ".class.php"
-
--   si ce n’est pas géré par un fichier d’inclusion, le nom du fichier
-    doit être "*nom\_class*.class.php"
-
--   les fichiers servant uniquement de point d’entrée pour inclure de
-    multiples fichiers doivent se finir par ".inc.php"
-
--   les fichiers de configuration doivent se finir par ".config.php"
-
--   les fichiers d’aide à une page doivent être nommés de cette forme
-    "help.*nomdelapage*.php". Le plus souvent un plugin n’ayant qu’une
-    page de vue, le fichier d’aide aura donc le nom suivant
-    "help.*PLUGIN\_ID*.php" (le nom de la première page d’un plugin est
-    forcément le même que l’ID de celui-ci, et donc que le nom du
-    dossier contenant le plugin)
-
-Voici les recommandations :
-
--   les fichiers de type AJAX doivent se finir par ".ajax.php"
-
--   le nom de la première page de vue d’un plugin doit être le même que
-    l’ID du plugin
-
--   le nom du fichier JS (s’il y en a un) de la première page de vue du
-    plugin doit être l’ID du plugin
-
-Création plugin partie 2 : plugin info 
+Commandes de l'équipement : 
 ===
 
 ### info.json 
