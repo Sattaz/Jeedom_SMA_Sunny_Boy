@@ -294,10 +294,21 @@ class SMA_SunnyBoy extends eqLogic {
 		//http://pydoc.net/pysma/0.1.3/pysma/
 		//https://community.openhab.org/t/example-on-how-to-access-data-of-a-sunny-boy-sma-solar-inverter/50963/18
 		
-		$ch = curl_init();
 		$SMA_IP = $this->getConfiguration("IP");
-		$SMA_RIGHT = 'usr';
 		$SMA_PASSWORD = $this->getConfiguration("Password");
+		
+		if (strlen($SMA_IP) == 0) {
+			log::add('SMA_SunnyBoy', 'debug','No IP defined for PV inverter interface ...');
+			return;
+		}
+		
+		if (strlen($SMA_PASSWORD) == 0) {
+			log::add('SMA_SunnyBoy', 'debug','No password defined for PV inverter interface ...');
+			return;
+		}
+		
+		$SMA_RIGHT = 'usr';
+		$ch = curl_init();
 		$headers = array();
 		$headers[] = "Accept: application/json";
 		$headers[] = "Accept-Charset: UTF-8";
@@ -335,14 +346,14 @@ class SMA_SunnyBoy extends eqLogic {
 		$json = json_decode($data, true);
 		
 		$pv_power = $json['result']['017A-B305A940']['6100_0046C200']['1']['0']['val'];
-		$pv_total = ($json['result']['017A-B305A940']['6400_00260100']['1']['0']['val'])/100;
+		$pv_total = ($json['result']['017A-B305A940']['6400_00260100']['1']['0']['val'])/1;
 		$frequency = ($json['result']['017A-B305A940']['6100_00465700']['1']['0']['val'])/100;
 		$voltage_l1 = ($json['result']['017A-B305A940']['6100_00464800']['1']['0']['val'])/100;
 		$voltage_l2 = ($json['result']['017A-B305A940']['6100_00464900']['1']['0']['val'])/100;
 		$voltage_l3 = ($json['result']['017A-B305A940']['6100_00464A00']['1']['0']['val'])/100;
-		$current_l1 = $json['result']['017A-B305A940']['6100_40465300']['1']['0']['val'];
-		$current_l2 = $json['result']['017A-B305A940']['6100_40465400']['1']['0']['val'];
-		$current_l3 = $json['result']['017A-B305A940']['6100_40465500']['1']['0']['val'];
+		$current_l1 = ($json['result']['017A-B305A940']['6100_40465300']['1']['0']['val'])/1000;
+		$current_l2 = ($json['result']['017A-B305A940']['6100_40465400']['1']['0']['val'])/1000;
+		$current_l3 = ($json['result']['017A-B305A940']['6100_40465500']['1']['0']['val'])/1000;
 		$wifi_signal = $json['result']['017A-B305A940']['6100_004AB600']['1']['0']['val'];
 		
 		if ($pv_power == '') {
@@ -359,7 +370,7 @@ class SMA_SunnyBoy extends eqLogic {
 			} else {
 				curl_close ($ch);
 				$json = json_decode($data, true);
-				$SMA_SID = $json['result']['017A-sid'];
+				$SMA_SID = $json['result']['sid'];
 				
 				$this->checkAndUpdateCmd('sessionID', $SMA_SID);
 				$this->checkAndUpdateCmd('pv_power', 0);
@@ -441,8 +452,7 @@ class SMA_SunnyBoyCmd extends cmd {
 				$eqlogic = $this->getEqLogic();
 				switch ($this->getLogicalId()) {		
 					case 'refresh':
-						//$info = $eqlogic->getSmaData(); 	//On lance la fonction getSmaData() pour récupérer la production instantanée et on la stocke dans la variable $info
-						$this->getSmaData();
+						$info = $eqlogic->getSmaData(); 	//On lance la fonction getSmaData() pour récupérer la production instantanée et on la stocke dans la variable $info
 						break;					
 		}
     }
