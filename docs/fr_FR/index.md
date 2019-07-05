@@ -11,7 +11,7 @@ Configuration du plugin :
 La configuration du plugin est très simple.
 Une fois installé, il suffit de créer un nouvel équipement et de le configurer de la manière suivantes:
 
-![SunnyBoy](/Pictures/SMA_SunnyBoy_2.jpg)
+![SunnyBoy](/pictures/SMA_SunnyBoy_2.jpg)
 
 Comme pour chaque plugin Jeedom, il faudra indiquer le 'Nom de l'équipement', un 'Objet parent' et une 'Catégorie'.
 Ne pas oublier de cocher les cases 'Activer' et 'Visible'.
@@ -34,7 +34,7 @@ Comme énoncé dans le précédent chapitre, les commandes de l'équipement sont
 
 IMPORTANT : ne pas effacer la commande 'Session ID' car elle est automatiquement créée et utilisée pour se connecter à l'onduleur.
 
-![SunnyBoy](/Pictures/SMA_SunnyBoy_3.jpg)
+![SunnyBoy](/pictures/SMA_SunnyBoy_3.jpg)
 
 
 
@@ -43,7 +43,7 @@ Le widget :
 
 Le widget arrive comme montré sur la photo ci-après et la jauge indiquant la valeur 'PV Production' est calibrée (min/max) par la puissance crête indiquée dans la configuration de l'équipement.
 
-![SunnyBoy](/Pictures/SMA_SunnyBoy_1.jpg)
+![SunnyBoy](/pictures/SMA_SunnyBoy_1.jpg)
 
 Libre à vous de modifier le widget afin de l'adapter à votre style de présentation.
 
