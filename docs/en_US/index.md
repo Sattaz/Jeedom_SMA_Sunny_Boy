@@ -5,7 +5,7 @@ Le plugin SMA-SunnyBoy permet de récupérer les informations de production phot
 
 En application courante, il permet par exemple d'allumer ou d'éteindre un équipement en fonction de la puissance réelle générée par votre installation PV depuis un scénario dans Jeedom.
 
-Configuration du plugin 
+Plugin configuration
 ===
 
 La configuration du plugin est très simple.
@@ -27,18 +27,18 @@ Puis viennent aussi quelques paramètres dédiés aux spécification de l'ondule
 -> Veuillez dès à présent appuyer sur le bouton 'Sauvegarder' afin d'enregistrer la configuration.
 -> Cette action va automatiquement créer les commandes de l'équipement.
 
-Commandes de l'équipement 
+Devices commands
 ===
 
 Comme énoncé dans le précédent chapitre, les commandes de l'équipement sont automatiquement crées dès lors que la configuration est sauvegardée.
 
-IMPORTANT : ne pas effacer la commande 'Session ID' car elle est automatiquement créée et utilisée pour se connecter à l'onduleur.
+IMPORTANT: Do not delete the &#39;Session ID&#39; command because it is automatically created and used to connect to the inverter.
 
 ![SunnyBoy](https://sattaz.github.io/Jeedom_SMA_Sunny_Boy/pictures/SMA_SunnyBoy_3.jpg)
 
 
 
-Le widget 
+The widget
 ===
 
 Le widget arrive comme montré sur la photo ci-après et la jauge indiquant la valeur 'PV Production' est calibrée (min/max) par la puissance crête indiquée dans la configuration de l'équipement.
@@ -52,5 +52,5 @@ Libre à vous de modifier le widget afin de l'adapter à votre style de présent
 Autres informations 
 ===
 
-* Le plugin rafraîchi les données toutes les minutes.
+* The plugin refreshed the data every minute.
 * Vous pouvez créer plusieurs équipements pour gérer les onduleurs d'une ferme photovoltaïque.

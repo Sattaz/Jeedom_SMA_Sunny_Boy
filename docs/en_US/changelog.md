@@ -1,1 +1,1 @@
-* 04-Juillet-2019: Première version du plugin
+* 04-Jul-2019: First version of the plugin
