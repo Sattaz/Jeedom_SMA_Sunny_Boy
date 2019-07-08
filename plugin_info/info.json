@@ -9,8 +9,8 @@
 	"hasDependency" : false,
 	"hasOwnDeamon" : false,
 	"maxDependancyInstallTime" : 0,
-	"changelog" : "",
-	"documentation" : "",
+	"changelog" : "https://sattaz.github.io/Jeedom_SMA_Sunny_Boy/changelog.md",
+	"documentation" : "https://sattaz.github.io/Jeedom_SMA_Sunny_Boy/",
 	"language" : "",
 	"compatibility" : ""
 }
