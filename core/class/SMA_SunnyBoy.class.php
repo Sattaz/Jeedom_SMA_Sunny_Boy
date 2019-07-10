@@ -356,6 +356,7 @@ class SMA_SunnyBoy extends eqLogic {
 			$len = strpos($string, $end, $ini) - $ini;
 			$InverterKey = substr($string, $ini, $len);
 		}
+		log::add('SMA_SunnyBoy', 'debug','string ='.$string);
 		
 		$json = json_decode($data, true);
 		
