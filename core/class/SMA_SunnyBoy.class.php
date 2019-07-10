@@ -331,9 +331,9 @@ class SMA_SunnyBoy extends eqLogic {
 		}
 		
 		// COLLECTING VALUES
-		$collection = ('{"destDev":[],"keys":["6100_0046C200","6100_00465700","6100_00464800","6100_00464900","6100_00464A00","6400_00260100","6100_40465300","6100_40465400","6100_40465500","6100_004AB600"]}');
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
-		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getValues.json?sid='.$SMA_SID);
+		//$collection = ('{"destDev":[],"keys":["6100_0046C200","6100_00465700","6100_00464800","6100_00464900","6100_00464A00","6400_00260100","6100_40465300","6100_40465400","6100_40465500","6100_004AB600"]}');
+		//curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
+		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
 		
 		if (curl_errno($ch)) {
