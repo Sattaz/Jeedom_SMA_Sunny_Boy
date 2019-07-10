@@ -331,9 +331,9 @@ class SMA_SunnyBoy extends eqLogic {
 		}
 		
 		// COLLECTING VALUES
-		$collection = ('{"destDev":[],"keys":["6100_0046C200","6100_00465700","6100_00464800","6100_00464900","6100_00464A00","6400_00260100","6100_40465300","6100_40465400","6100_40465500","6100_004AB600"]}');
+		$collection = ('{"destDev":[],"keys":[]}');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
-		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getValues.json?sid='.$SMA_SID);
+		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
 		
 		if (curl_errno($ch)) {
@@ -343,20 +343,21 @@ class SMA_SunnyBoy extends eqLogic {
 			return;
 		}
 		
-		$json = json_decode($data, true);
+		$InverterKey = '';
+		$string = $data;
+		$start = 'result":{"';
+		$end = '"';
+		$string = ' ' . $string;
+		$ini = strpos($string, $start);
+		if ($ini == 0) {
+			$InverterKey = '';
+		} else {
+			$ini += strlen($start);
+			$len = strpos($string, $end, $ini) - $ini;
+			$InverterKey = substr($string, $ini, $len);
+		}
 		
-		$pv_power = $json['result']['017A-B305A940']['6100_0046C200']['1']['0']['val'];
-		$pv_total = ($json['result']['017A-B305A940']['6400_00260100']['1']['0']['val'])/1;
-		$frequency = ($json['result']['017A-B305A940']['6100_00465700']['1']['0']['val'])/100;
-		$voltage_l1 = ($json['result']['017A-B305A940']['6100_00464800']['1']['0']['val'])/100;
-		$voltage_l2 = ($json['result']['017A-B305A940']['6100_00464900']['1']['0']['val'])/100;
-		$voltage_l3 = ($json['result']['017A-B305A940']['6100_00464A00']['1']['0']['val'])/100;
-		$current_l1 = ($json['result']['017A-B305A940']['6100_40465300']['1']['0']['val'])/1000;
-		$current_l2 = ($json['result']['017A-B305A940']['6100_40465400']['1']['0']['val'])/1000;
-		$current_l3 = ($json['result']['017A-B305A940']['6100_40465500']['1']['0']['val'])/1000;
-		$wifi_signal = $json['result']['017A-B305A940']['6100_004AB600']['1']['0']['val'];
-		
-		if ($pv_power == '') {
+		if ($InverterKey == '') {
 			// LOGIN
 			$credentials = ('{"pass" : "'.$SMA_PASSWORD.'", "right" : "'.$SMA_RIGHT.'"}');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $credentials);
@@ -392,6 +393,19 @@ class SMA_SunnyBoy extends eqLogic {
 			
 			curl_close ($ch);
 
+			$json = json_decode($data, true);
+		
+			$pv_power = $json['result'][$InverterKey]['6100_0046C200']['1']['0']['val'];
+			$pv_total = ($json['result'][$InverterKey]['6400_00260100']['1']['0']['val'])/1;
+			$frequency = ($json['result'][$InverterKey]['6100_00465700']['1']['0']['val'])/100;
+			$voltage_l1 = ($json['result'][$InverterKey]['6100_00464800']['1']['0']['val'])/100;
+			$voltage_l2 = ($json['result'][$InverterKey]['6100_00464900']['1']['0']['val'])/100;
+			$voltage_l3 = ($json['result'][$InverterKey]['6100_00464A00']['1']['0']['val'])/100;
+			$current_l1 = ($json['result'][$InverterKey]['6100_40465300']['1']['0']['val'])/1000;
+			$current_l2 = ($json['result'][$InverterKey]['6100_40465400']['1']['0']['val'])/1000;
+			$current_l3 = ($json['result'][$InverterKey]['6100_40465500']['1']['0']['val'])/1000;
+			$wifi_signal = $json['result'][$InverterKey]['6100_004AB600']['1']['0']['val'];
+			
 			$this->checkAndUpdateCmd('pv_power', $pv_power);
 			$this->checkAndUpdateCmd('pv_total', $pv_total);
 			$this->checkAndUpdateCmd('frequency', $frequency);
@@ -458,5 +472,4 @@ class SMA_SunnyBoyCmd extends cmd {
     }
     /*     * **********************Getteur Setteur*************************** */
 }
-
 
