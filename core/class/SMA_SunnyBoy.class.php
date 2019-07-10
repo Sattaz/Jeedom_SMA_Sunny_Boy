@@ -331,8 +331,8 @@ class SMA_SunnyBoy extends eqLogic {
 		}
 		
 		// COLLECTING VALUES
-		//$collection = ('{"destDev":[],"keys":[]}');
-		//curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
+		$collection = ('{"destDev":[],"keys":[]}');
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
 		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
 		
