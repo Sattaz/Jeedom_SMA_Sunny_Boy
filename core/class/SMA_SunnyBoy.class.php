@@ -343,18 +343,32 @@ class SMA_SunnyBoy extends eqLogic {
 			return;
 		}
 		
+		$InverterKey = '';
+		$string = $data;
+		$start = 'result":{"';
+		$end = '"';
+		$string = ' ' . $string;
+		$ini = strpos($string, $start);
+		if ($ini == 0) {
+			$InverterKey = '';
+		} else {
+			$ini += strlen($start);
+			$len = strpos($string, $end, $ini) - $ini;
+			$InverterKey = substr($string, $ini, $len);
+		}
+		
 		$json = json_decode($data, true);
 		
-		$pv_power = $json['result']['017A-B305A940']['6100_0046C200']['1']['0']['val'];
-		$pv_total = ($json['result']['017A-B305A940']['6400_00260100']['1']['0']['val'])/1;
-		$frequency = ($json['result']['017A-B305A940']['6100_00465700']['1']['0']['val'])/100;
-		$voltage_l1 = ($json['result']['017A-B305A940']['6100_00464800']['1']['0']['val'])/100;
-		$voltage_l2 = ($json['result']['017A-B305A940']['6100_00464900']['1']['0']['val'])/100;
-		$voltage_l3 = ($json['result']['017A-B305A940']['6100_00464A00']['1']['0']['val'])/100;
-		$current_l1 = ($json['result']['017A-B305A940']['6100_40465300']['1']['0']['val'])/1000;
-		$current_l2 = ($json['result']['017A-B305A940']['6100_40465400']['1']['0']['val'])/1000;
-		$current_l3 = ($json['result']['017A-B305A940']['6100_40465500']['1']['0']['val'])/1000;
-		$wifi_signal = $json['result']['017A-B305A940']['6100_004AB600']['1']['0']['val'];
+		$pv_power = $json['result'][$InverterKey]['6100_0046C200']['1']['0']['val'];
+		$pv_total = ($json['result'][$InverterKey]['6400_00260100']['1']['0']['val'])/1;
+		$frequency = ($json['result'][$InverterKey]['6100_00465700']['1']['0']['val'])/100;
+		$voltage_l1 = ($json['result'][$InverterKey]['6100_00464800']['1']['0']['val'])/100;
+		$voltage_l2 = ($json['result'][$InverterKey]['6100_00464900']['1']['0']['val'])/100;
+		$voltage_l3 = ($json['result'][$InverterKey]['6100_00464A00']['1']['0']['val'])/100;
+		$current_l1 = ($json['result'][$InverterKey]['6100_40465300']['1']['0']['val'])/1000;
+		$current_l2 = ($json['result'][$InverterKey]['6100_40465400']['1']['0']['val'])/1000;
+		$current_l3 = ($json['result'][$InverterKey]['6100_40465500']['1']['0']['val'])/1000;
+		$wifi_signal = $json['result'][$InverterKey]['6100_004AB600']['1']['0']['val'];
 		
 		if ($pv_power == '') {
 			// LOGIN
