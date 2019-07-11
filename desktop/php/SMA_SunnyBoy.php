@@ -120,7 +120,13 @@ foreach (jeeObject::all() as $object) {
             <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="IP" placeholder="IP de l'onduleur"/>
         </div>
     </div>
-	<div class="form-group">
+    <div class="form-group">
+        <label class="col-sm-3 control-label">{{Port}}</label>
+        <div class="col-sm-3">
+			<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Port" placeholder="Port de l'onduleur"/>
+        </div>
+    </div>
+    <div class="form-group">
         <label class="col-sm-3 control-label">{{Mot de passe}}</label>
         <div class="col-sm-3">
 			<input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="Password" placeholder="Mot de passe"/>
