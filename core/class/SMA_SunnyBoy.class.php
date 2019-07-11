@@ -309,7 +309,7 @@ class SMA_SunnyBoy extends eqLogic {
 		}
 		
 		if (strlen($SMA_Port) == 0) {
-			$SMA_Port = 80;
+			$SMA_Port = 443;
 		}
 		
 		$SMA_RIGHT = 'usr';
