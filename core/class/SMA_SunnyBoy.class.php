@@ -295,6 +295,7 @@ class SMA_SunnyBoy extends eqLogic {
 		//https://community.openhab.org/t/example-on-how-to-access-data-of-a-sunny-boy-sma-solar-inverter/50963/18
 		
 		$SMA_IP = $this->getConfiguration("IP");
+		$SMA_Port = $this->getConfiguration("Port");
 		$SMA_PASSWORD = $this->getConfiguration("Password");
 		
 		if (strlen($SMA_IP) == 0) {
@@ -305,6 +306,10 @@ class SMA_SunnyBoy extends eqLogic {
 		if (strlen($SMA_PASSWORD) == 0) {
 			log::add('SMA_SunnyBoy', 'debug','No password defined for PV inverter interface ...');
 			return;
+		}
+		
+		if (strlen($SMA_Port) == 0) {
+			$SMA_Port = 80;
 		}
 		
 		$SMA_RIGHT = 'usr';
@@ -333,7 +338,7 @@ class SMA_SunnyBoy extends eqLogic {
 		// COLLECTING VALUES
 		$collection = ('{"destDev":[],"keys":[]}');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
-		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
+		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.':'.$SMA_Port.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
 		
 		if (curl_errno($ch)) {
@@ -361,7 +366,7 @@ class SMA_SunnyBoy extends eqLogic {
 			// LOGIN
 			$credentials = ('{"pass" : "'.$SMA_PASSWORD.'", "right" : "'.$SMA_RIGHT.'"}');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $credentials);
-			curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/login.json');
+			curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.':'.$SMA_Port.'/dyn/login.json');
 			$data = curl_exec($ch);
 			if (curl_errno($ch)) {
 				log::add('SMA_SunnyBoy', 'error','Error login to inverter: '.curl_error($ch));
