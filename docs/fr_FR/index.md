@@ -22,7 +22,7 @@ Puis viennent aussi quelques paramètres dédiés aux spécification de l'ondule
 
 -   Port de l'onduleur : veuillez renseigner le port de l'interface 'WebConnect' de l'onduleur. (443 pour connexion HTTPS, 80 pour connexion HTTP ... à essayer selon la configuration de l'onduleur)
 
--   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'Web§Connect' de l'onduleur.
+-   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'WebConnect' de l'onduleur.
 
 -   Puissance crête : veuillez renseigner la puissance de votre installation photovoltaïque (en watts)
 
