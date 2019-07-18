@@ -295,7 +295,9 @@ class SMA_SunnyBoy extends eqLogic {
 		//https://community.openhab.org/t/example-on-how-to-access-data-of-a-sunny-boy-sma-solar-inverter/50963/18
 		
 		$SMA_IP = $this->getConfiguration("IP");
+		$SMA_Port = $this->getConfiguration("Port");
 		$SMA_PASSWORD = $this->getConfiguration("Password");
+		$SMA_HTTP = '';
 		
 		if (strlen($SMA_IP) == 0) {
 			log::add('SMA_SunnyBoy', 'debug','No IP defined for PV inverter interface ...');
@@ -305,6 +307,16 @@ class SMA_SunnyBoy extends eqLogic {
 		if (strlen($SMA_PASSWORD) == 0) {
 			log::add('SMA_SunnyBoy', 'debug','No password defined for PV inverter interface ...');
 			return;
+		}
+		
+		if (strlen($SMA_Port) == 0) {
+			$SMA_Port = 443;
+		}
+		
+		if ($SMA_Port == 443) {
+			$SMA_HTTP = 'https';
+		} else {
+			$SMA_HTTP = 'http';
 		}
 		
 		$SMA_RIGHT = 'usr';
@@ -331,37 +343,36 @@ class SMA_SunnyBoy extends eqLogic {
 		}
 		
 		// COLLECTING VALUES
+		$InverterKey = '';
 		$collection = ('{"destDev":[],"keys":[]}');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
-		curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
+		curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
 		
 		if (curl_errno($ch)) {
 			curl_close ($ch);
 			log::add('SMA_SunnyBoy', 'error','Error getting inverter values: '.curl_error($ch));
 			$this->checkAndUpdateCmd('status', 'Erreur Données');
-			return;
-		}
-		
-		$InverterKey = '';
-		$string = $data;
-		$start = 'result":{"';
-		$end = '"';
-		$string = ' ' . $string;
-		$ini = strpos($string, $start);
-		if ($ini == 0) {
-			$InverterKey = '';
 		} else {
-			$ini += strlen($start);
-			$len = strpos($string, $end, $ini) - $ini;
-			$InverterKey = substr($string, $ini, $len);
+			$string = $data;
+			$start = 'result":{"';
+			$end = '"';
+			$string = ' ' . $string;
+			$ini = strpos($string, $start);
+			if ($ini == 0) {
+				$InverterKey = '';
+			} else {
+				$ini += strlen($start);
+				$len = strpos($string, $end, $ini) - $ini;
+				$InverterKey = substr($string, $ini, $len);
+			}
 		}
 		
 		if ($InverterKey == '') {
 			// LOGIN
 			$credentials = ('{"pass" : "'.$SMA_PASSWORD.'", "right" : "'.$SMA_RIGHT.'"}');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $credentials);
-			curl_setopt($ch, CURLOPT_URL, 'https://'.$SMA_IP.'/dyn/login.json');
+			curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/login.json');
 			$data = curl_exec($ch);
 			if (curl_errno($ch)) {
 				log::add('SMA_SunnyBoy', 'error','Error login to inverter: '.curl_error($ch));
