@@ -20,7 +20,7 @@ Puis viennent aussi quelques paramètres dédiés aux spécification de l'ondule
 
 -   IP de l'onduleur : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'onduleur.
 
--   Port de l'onduleur : veuillez renseigner le port de l'interface 'WebConnect' de l'onduleur. (443 par défaut pour Sunny Tripower, 80 par défaut pour Sunny Boy)
+-   Port de l'onduleur : veuillez renseigner le port de l'interface 'WebConnect' de l'onduleur. (443 pour connexion HTTPS, 80 pour connexion HTTP ... à essayer selon la configuration de l'onduleur)
 
 -   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'Web§Connect' de l'onduleur.
 
