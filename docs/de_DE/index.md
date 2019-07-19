@@ -1,7 +1,7 @@
 Description 
 ===
 
-Le plugin SMA-SunnyBoy permet de récupérer les informations de production photovoltaïque des onduleurs SMA de type Sunny Boy.
+Le plugin SMA-SunnyBoy permet de récupérer les informations de production photovoltaïque des onduleurs SMA de type Sunny Boy et Sunny Tripower.
 
 En application courante, il permet par exemple d'allumer ou d'éteindre un équipement en fonction de la puissance réelle générée par votre installation PV depuis un scénario dans Jeedom.
 
@@ -20,9 +20,9 @@ Puis viennent aussi quelques paramètres dédiés aux spécification de l'ondule
 
 -   IP de l'onduleur : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'onduleur.
 
--   Port de l'onduleur : veuillez renseigner le port de l'interface 'WebConnect' de l'onduleur. (443 par défaut)
+-   Port de l'onduleur : veuillez renseigner le port de l'interface 'WebConnect' de l'onduleur. (443 pour connexion HTTPS, 80 pour connexion HTTP ... à essayer selon la configuration de l'onduleur)
 
--   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'Web§Connect' de l'onduleur.
+-   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'WebConnect' de l'onduleur.
 
 -   Puissance crête : veuillez renseigner la puissance de votre installation photovoltaïque (en watts)
 
