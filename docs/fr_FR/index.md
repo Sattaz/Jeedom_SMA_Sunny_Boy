@@ -3,6 +3,8 @@ Description
 
 Le plugin SMA-SunnyBoy permet de récupérer les informations de production photovoltaïque des onduleurs SMA de type Sunny Boy et Sunny Tripower.
 
+Il permet aussi de récupérer les informations du compteur d'énergie SMA Energy Meter.
+
 En application courante, il permet par exemple d'allumer ou d'éteindre un équipement en fonction de la puissance réelle générée par votre installation PV depuis un scénario dans Jeedom.
 
 Configuration du plugin 
@@ -16,15 +18,19 @@ Une fois installé, il suffit de créer un nouvel équipement et de le configure
 Comme pour chaque plugin Jeedom, il faudra indiquer le 'Nom de l'équipement', un 'Objet parent' et une 'Catégorie'.
 Ne pas oublier de cocher les cases 'Activer' et 'Visible'.
 
-Puis viennent aussi quelques paramètres dédiés aux spécification de l'onduleur SMA:
+Puis viennent aussi quelques paramètres dédiés aux spécification de l'équipement SMA:
 
--   IP de l'onduleur : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'onduleur.
+-   Référence appareil : veuillez sélectioner le type d'équipement.
 
--   Port de l'onduleur : veuillez renseigner le port de l'interface 'WebConnect' de l'onduleur. (443 pour connexion HTTPS, 80 pour connexion HTTP ... à essayer selon la configuration de l'onduleur)
+-   IP : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'équipement.
 
--   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'WebConnect' de l'onduleur.
+-   Port : veuillez renseigner le port de l'interface 'WebConnect' de l'équipement. (443 pour connexion HTTPS, 80 pour connexion HTTP ... à essayer selon la configuration de l'onduleur)
 
--   Puissance crête : veuillez renseigner la puissance de votre installation photovoltaïque (en watts)
+-   Protocole : veuillez sélectioner le protocole de l'interface 'WebConnect' de l'équipement.
+
+-   Mot de passe : veuillez renseigner le mot de passe que utiliser pour se connecter à l'interface 'WebConnect' de l'équipement.
+
+-   Puissance crête : veuillez renseigner la puissance de votre installation photovoltaïque. (en watts, uniquement pour un équipement de type 'Onduleur')
 
 -> Veuillez dès à présent appuyer sur le bouton 'Sauvegarder' afin d'enregistrer la configuration.
 -> Cette action va automatiquement créer les commandes de l'équipement.
@@ -34,7 +40,7 @@ Commandes de l'équipement
 
 Comme énoncé dans le précédent chapitre, les commandes de l'équipement sont automatiquement crées dès lors que la configuration est sauvegardée.
 
-IMPORTANT : ne pas effacer la commande 'Session ID' car elle est automatiquement créée et utilisée pour se connecter à l'onduleur.
+IMPORTANT : ne pas effacer la commande 'Session ID' car elle est automatiquement créée et utilisée pour se connecter à l'équipement.
 
 ![SunnyBoy](https://sattaz.github.io/Jeedom_SMA_Sunny_Boy/pictures/SMA_SunnyBoy_3.jpg)
 
@@ -43,7 +49,7 @@ IMPORTANT : ne pas effacer la commande 'Session ID' car elle est automatiquement
 Le widget 
 ===
 
-Le widget arrive comme montré sur la photo ci-après et la jauge indiquant la valeur 'PV Production' est calibrée (min/max) par la puissance crête indiquée dans la configuration de l'équipement.
+Le widget arrive comme montré sur l'exemple ci-après et la jauge indiquant la valeur 'PV Production' est calibrée (min/max) par la puissance crête indiquée dans la configuration de l'équipement.
 
 ![SunnyBoy](https://sattaz.github.io/Jeedom_SMA_Sunny_Boy/pictures/SMA_SunnyBoy_1.jpg)
 
@@ -54,5 +60,5 @@ Libre à vous de modifier le widget afin de l'adapter à votre style de présent
 Autres informations 
 ===
 
-* Le plugin rafraîchi les données toutes les minutes.
-* Vous pouvez créer plusieurs équipements pour gérer les onduleurs d'une ferme photovoltaïque.
+* Le plugin rafraîchi les données à la fréquence definie dans la configuration générale du plugin.
+* Vous pouvez créer plusieurs équipements pour gérer les onduleurs / compteurs d'énergie d'une ferme photovoltaïque.
