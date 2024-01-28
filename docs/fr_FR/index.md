@@ -22,7 +22,7 @@ Puis viennent aussi quelques paramètres dédiés aux spécification de l'équip
 
 -   Référence appareil : veuillez sélectioner le type d'équipement.
 
--   IP de l'équipement : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'équipement.
+-   IP : veuillez renseigner l'adresse IP de l'interface 'WebConnect' de l'équipement.
 
 -   Port : veuillez renseigner le port de l'interface 'WebConnect' de l'équipement. (443 pour connexion HTTPS, 80 pour connexion HTTP ... à essayer selon la configuration de l'onduleur)
 
