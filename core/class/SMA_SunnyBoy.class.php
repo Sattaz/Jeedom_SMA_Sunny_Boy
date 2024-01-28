@@ -190,8 +190,8 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setEqLogic_id($this->getId());
 				$info->setType('info');
 				$info->setSubType('numeric');
-				$info->setTemplate('dashboard','line');
-				$info->setTemplate('mobile','line');
+				//$info->setTemplate('dashboard','line');
+				//$info->setTemplate('mobile','line');
 				$info->setConfiguration('minValue', 0);
 				$info->setConfiguration('maxValue', $this->getConfiguration("Power"));
 				$info->setIsHistorized(1);
@@ -466,8 +466,8 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setEqLogic_id($this->getId());
 				$info->setType('info');
 				$info->setSubType('numeric');
-				$info->setTemplate('dashboard','line');
-				$info->setTemplate('mobile','line');          
+				//$info->setTemplate('dashboard','line');
+				//$info->setTemplate('mobile','line');          
 				$info->setConfiguration('minValue', 0);
 				$info->setConfiguration('maxValue', $this->getConfiguration("Power"));
 				$info->setIsHistorized(1);
