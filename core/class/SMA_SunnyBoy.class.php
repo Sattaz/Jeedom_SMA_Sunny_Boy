@@ -445,7 +445,7 @@ class SMA_SunnyBoy extends eqLogic {
 		
      		$refresh = $this->getCmd(null, 'update');
 			if (!is_object($refresh)) {
-				$refresh = new templateDaemonPHPCmd();
+				$refresh = new SMA_SunnyBoyCmd();
 				$refresh->setName(__('Rafraîchir', __FILE__));
 				$refresh->setEqLogic_id($this->getId());
 				$refresh->setLogicalId('update');
@@ -829,7 +829,7 @@ class SMA_SunnyBoy extends eqLogic {
 		
      		$refresh = $this->getCmd(null, 'update');
 			if (!is_object($refresh)) {
-				$refresh = new templateDaemonPHPCmd();
+				$refresh = new SMA_SunnyBoyCmd();
 				$refresh->setName(__('Rafraîchir', __FILE__));
 				$refresh->setEqLogic_id($this->getId());
 				$refresh->setLogicalId('update');
@@ -944,7 +944,7 @@ class SMA_SunnyBoy extends eqLogic {
 		
      		$refresh = $this->getCmd(null, 'update');
 			if (!is_object($refresh)) {
-				$refresh = new templateDaemonPHPCmd();
+				$refresh = new SMA_SunnyBoyCmd();
 				$refresh->setName(__('Rafraîchir', __FILE__));
 				$refresh->setEqLogic_id($this->getId());
 				$refresh->setLogicalId('update');
@@ -1167,7 +1167,7 @@ class SMA_SunnyBoy extends eqLogic {
 		
      		$refresh = $this->getCmd(null, 'update');
 			if (!is_object($refresh)) {
-				$refresh = new templateDaemonPHPCmd();
+				$refresh = new SMA_SunnyBoyCmd();
 				$refresh->setName(__('Rafraîchir', __FILE__));
 				$refresh->setEqLogic_id($this->getId());
 				$refresh->setLogicalId('update');
