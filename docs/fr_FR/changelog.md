@@ -6,7 +6,7 @@ Récupération de paramètres supplémentaires utiles des onduleurs.
 
 Gestion du compteur d'énergie SMA Energy Meter.
 
-Ajout d'un demon PHP qui gère le rafraîchissement des informations de chaque équipement a la place du CRON.
+Ajout d'un demon PHP qui gère le rafraîchissement des informations de chaque équipement à la place du CRON.
 
 Possibilité de spécifier la fréquence de rafraîchissement des données des équipements.
 
