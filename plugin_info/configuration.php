@@ -20,7 +20,7 @@ include_file('core', 'authentification', 'php');
 if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
 }
-$eqLogics = eqLogic::byType('templateDaemonPHP', true);
+$eqLogics = eqLogic::byType('SMA_SunnyBoy', true);
 ?>
 
 <form class="form-horizontal">
