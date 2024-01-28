@@ -151,7 +151,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<div class="form-group" id="divIP" style="display: block">
 								<label class="col-sm-3 control-label">{{IP}}</label>
 								<div class="col-sm-3">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="IP" placeholder="IP de l'onduleur"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="IP" placeholder="IP"/>
 								</div>
 							</div>
 							<div class="form-group" id="divPort" style="display: block">
