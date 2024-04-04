@@ -74,7 +74,7 @@ class SMA_SunnyBoy extends eqLogic {
 	}
 
 	public static function daemon() {
-      	//gc_enable();
+      	gc_enable();
       	log::add(__CLASS__, 'debug', "Memory_usage Start: ".memory_get_usage());
 		foreach (self::byType(__CLASS__, true) as $eqLogic) {
           	//$cmd = $eqLogic->getCmd(null, 'update');//retourne la commande 'update' si elle existe
@@ -86,7 +86,7 @@ class SMA_SunnyBoy extends eqLogic {
           	$eqLogic->getSmaData();
 		}
       	log::add(__CLASS__, 'debug', "Memory_usage End: ".memory_get_usage());
-      	//gc_collect_cycles();
+      	gc_collect_cycles();
 	}
     
     /*     * *********************Méthodes d'instance************************* */
@@ -1297,11 +1297,12 @@ class SMA_SunnyBoy extends eqLogic {
 			$this->checkAndUpdateCmd('status', 'Erreur Données');
           	curl_close($ch);
           	unset($ch);
+          	unset($data);
           	return;
 		} else {
           	$InverterKey = $this->get_string_between($data,'result":{"','"');
-		}
-      	//curl_close ($ch);
+          	//unset($data);
+        }
       
       	log::add(__CLASS__, 'debug', "Memory_usage Collecting Values Completed: ".memory_get_usage());
 		
@@ -1314,19 +1315,20 @@ class SMA_SunnyBoy extends eqLogic {
 			if (curl_errno($ch)) {
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot login to equipment: '.curl_error($ch));
 				curl_close($ch);
-              	unset($ch);
 				$this->checkAndUpdateCmd('status', 'Erreur Identification');
+              	unset($ch);
+              	unset($data);
 				return;
 			} else {
 				curl_close($ch);
               	unset($ch);
 				$json = json_decode($data, true);
-              	//unset($data);
 				$SMA_SID = $json['result']['sid'];
-              	//unset($json);
 				$this->checkAndUpdateCmd('sessionID', $SMA_SID);
 				$this->checkAndUpdateCmd('status', 'Hors Ligne ...');
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Getting session ID ...');
+              	unset($data);
+              	unset($json);
 				return;
 			}
           
@@ -1345,14 +1347,12 @@ class SMA_SunnyBoy extends eqLogic {
 				curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getValues.json?sid='.$SMA_SID);
 				$dataDC = curl_exec($ch);
   				$jsonDC = json_decode($dataDC, true);
-              	unset($dataDC);
 				$currentDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['0']['val'])/1000),2);
 				$currentDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['1']['val'])/1000),2);
 				$voltageDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['0']['val'])/100),1);
 				$voltageDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['1']['val'])/100),1);
 				$powerDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['0']['val'])/1),0);
 				$powerDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['1']['val'])/1),0);
-              	//unset($jsonDC);
               
               	log::add(__CLASS__, 'debug', "Memory_usage DC Data Retrieved: ".memory_get_usage());
             }
@@ -1363,7 +1363,7 @@ class SMA_SunnyBoy extends eqLogic {
           	log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, Start Of Assigning Values To Commands: ".memory_get_usage());
 
 			$json = json_decode($data, true);
-		
+          			
           	$balance = round(($json['result'][$InverterKey]['6100_40263F00'][$typeID]['0']['val']) * -1,0);
 			$pv_power = round($json['result'][$InverterKey]['6100_0046C200'][$typeID]['0']['val'],0);
 			$pv_total = round(($json['result'][$InverterKey]['6400_00260100'][$typeID]['0']['val'])/1,0);
@@ -1378,38 +1378,41 @@ class SMA_SunnyBoy extends eqLogic {
            	$power_l1 = round(floatval(($json['result'][$InverterKey]['6100_40464000'][$typeID]['0']['val'])/1),0);
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
-          
-          	//unset($json);
 			
-          	if ($DeviceType==30 || $DeviceType==40) {$this->checkAndUpdateCmd('balance', $balance);}
-			if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('pv_power', $pv_power);}
-			if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('pv_total', $pv_total);}
-			if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('frequency', $frequency);}
-			if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$this->checkAndUpdateCmd('voltage_l1', $voltage_l1);}
-			if ($DeviceType==20 || $DeviceType==40) {$this->checkAndUpdateCmd('voltage_l2', $voltage_l2);}
-			if ($DeviceType==20 || $DeviceType==40) {$this->checkAndUpdateCmd('voltage_l3', $voltage_l3);}
-			if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$this->checkAndUpdateCmd('current_l1', $current_l1);}
-			if ($DeviceType==20 || $DeviceType==40) {$this->checkAndUpdateCmd('current_l2', $current_l2);}
-			if ($DeviceType==20 || $DeviceType==40) {$this->checkAndUpdateCmd('current_l3', $current_l3);}
-        	if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$this->checkAndUpdateCmd('power_l1', $power_l1);}
-			if ($DeviceType==20 || $DeviceType==40) {$this->checkAndUpdateCmd('power_l2', $power_l2);}
-			if ($DeviceType==20 || $DeviceType==40) {$this->checkAndUpdateCmd('power_l3', $power_l3);}
-          	if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('voltageDC_A', $voltageDC_A);}
-          	if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('voltageDC_B', $voltageDC_B);}
-          	if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('currentDC_A', $currentDC_A);}
-          	if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('currentDC_B', $currentDC_B);}
-          	if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('powerDC_A', $powerDC_A);}
-          	if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('powerDC_B', $powerDC_B);}
-			if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('wifi_signal', $wifi_signal);}
-			
-			$this->checkAndUpdateCmd('status', 'OK');
-          
-          	//unset($data);
-          
+          	foreach ($this->getCmd('info') as $cmd) {
+        		$cmdLogicalId = $cmd->getLogicalId();
+          		if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
+				if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
+				if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
+				if ($cmdLogicalId == 'frequency' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $frequency);}
+				if ($cmdLogicalId == 'voltage_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l1);}
+				if ($cmdLogicalId == 'voltage_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l2);}
+				if ($cmdLogicalId == 'voltage_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l3);}
+				if ($cmdLogicalId == 'current_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l1);}
+				if ($cmdLogicalId == 'current_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l2);}
+				if ($cmdLogicalId == 'current_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l3);}
+        		if ($cmdLogicalId == 'power_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l1);}
+				if ($cmdLogicalId == 'power_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l2);}
+				if ($cmdLogicalId == 'power_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l3);}
+          		if ($cmdLogicalId == 'voltageDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_A);}
+          		if ($cmdLogicalId == 'voltageDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_B);}
+          		if ($cmdLogicalId == 'currentDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_A);}
+          		if ($cmdLogicalId == 'currentDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_B);}
+          		if ($cmdLogicalId == 'powerDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_A);}
+          		if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
+				if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
+				if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
+            }
+         
           	log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
           
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
-              
+
+          	unset($data);
+          	unset($dataDC);
+          	unset($json);
+          	unset($jsonDC);
+                    
 			return;
 		}
 		
