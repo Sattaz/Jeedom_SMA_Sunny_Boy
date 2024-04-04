@@ -75,7 +75,7 @@ class SMA_SunnyBoy extends eqLogic {
 
 	public static function daemon() {
       	//gc_enable();
-      	log::add(__CLASS__, 'debug', "Memory_usage: ".memory_get_usage());
+      	log::add(__CLASS__, 'debug', "Memory_usage Start: ".memory_get_usage());
 		foreach (self::byType(__CLASS__, true) as $eqLogic) {
           	//$cmd = $eqLogic->getCmd(null, 'update');//retourne la commande 'update' si elle existe
 			//if (is_object($cmd)) {//si la comande existe
@@ -85,6 +85,7 @@ class SMA_SunnyBoy extends eqLogic {
           	//unset($eqLogic);
           	$eqLogic->getSmaData();
 		}
+      	log::add(__CLASS__, 'debug', "Memory_usage End: ".memory_get_usage());
       	//gc_collect_cycles();
 	}
     
@@ -1256,6 +1257,8 @@ class SMA_SunnyBoy extends eqLogic {
 		} else {
 			$SMA_HTTP = 'https';
 		}
+      
+      	log::add(__CLASS__, 'debug', "Memory_usage Config Loaded: ".memory_get_usage());
 		
 		$SMA_RIGHT = 'usr';
 		$ch = curl_init();
@@ -1279,6 +1282,8 @@ class SMA_SunnyBoy extends eqLogic {
 			$SMA_SID = '';
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get Session ID: '.$e);
 		}
+      
+      	log::add(__CLASS__, 'debug', "Memory_usage Stored Session ID Retrieved: ".memory_get_usage());
 		
 		// COLLECTING VALUES
 		$InverterKey = '';
@@ -1291,12 +1296,14 @@ class SMA_SunnyBoy extends eqLogic {
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get equipment values: '.curl_error($ch));
 			$this->checkAndUpdateCmd('status', 'Erreur Données');
           	curl_close($ch);
-          	//unset($ch);
+          	unset($ch);
           	return;
 		} else {
           	$InverterKey = $this->get_string_between($data,'result":{"','"');
 		}
       	//curl_close ($ch);
+      
+      	log::add(__CLASS__, 'debug', "Memory_usage Collecting Values Completed: ".memory_get_usage());
 		
 		if ($InverterKey == '') {
 			// LOGIN
@@ -1307,12 +1314,12 @@ class SMA_SunnyBoy extends eqLogic {
 			if (curl_errno($ch)) {
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot login to equipment: '.curl_error($ch));
 				curl_close($ch);
-              	//unset($ch);
+              	unset($ch);
 				$this->checkAndUpdateCmd('status', 'Erreur Identification');
 				return;
 			} else {
 				curl_close($ch);
-              	//unset($ch);
+              	unset($ch);
 				$json = json_decode($data, true);
               	//unset($data);
 				$SMA_SID = $json['result']['sid'];
@@ -1322,6 +1329,8 @@ class SMA_SunnyBoy extends eqLogic {
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Getting session ID ...');
 				return;
 			}
+          
+          	log::add(__CLASS__, 'debug', "Memory_usage SMA Session ID Read Completed : ".memory_get_usage());
 			
 		} else {
           
@@ -1336,7 +1345,7 @@ class SMA_SunnyBoy extends eqLogic {
 				curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getValues.json?sid='.$SMA_SID);
 				$dataDC = curl_exec($ch);
   				$jsonDC = json_decode($dataDC, true);
-              	//unset($dataDC);
+              	unset($dataDC);
 				$currentDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['0']['val'])/1000),2);
 				$currentDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['1']['val'])/1000),2);
 				$voltageDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['0']['val'])/100),1);
@@ -1344,10 +1353,14 @@ class SMA_SunnyBoy extends eqLogic {
 				$powerDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['0']['val'])/1),0);
 				$powerDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['1']['val'])/1),0);
               	//unset($jsonDC);
+              
+              	log::add(__CLASS__, 'debug', "Memory_usage DC Data Retrieved: ".memory_get_usage());
             }
 			
 			curl_close($ch);
-          	//unset($ch);
+          	unset($ch);
+          
+          	log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, Start Of Assigning Values To Commands: ".memory_get_usage());
 
 			$json = json_decode($data, true);
 		
@@ -1390,10 +1403,13 @@ class SMA_SunnyBoy extends eqLogic {
 			if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('wifi_signal', $wifi_signal);}
 			
 			$this->checkAndUpdateCmd('status', 'OK');
-			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
-              
+          
           	//unset($data);
           
+          	log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
+          
+			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
+              
 			return;
 		}
 		
