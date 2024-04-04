@@ -23,6 +23,15 @@ class SMA_SunnyBoy extends eqLogic {
     /*     * *************************Attributs****************************** */
 
     /*     * ***********************Methode static*************************** */
+  
+  	public static function cronHourly() {
+    	$h = date('G');
+    	if($h == 2) { // Redemarrage du deamon a 2h du matin chaque jour cause fuite memoire
+          	log::add(__CLASS__, 'debug', "Deamon: restarting ...");
+			self::deamon_start();
+          	log::add(__CLASS__, 'debug', "Deamon: restarted!");
+    	}
+  	}
 
   	public static function deamon_info() {
 		$return = array();
@@ -49,6 +58,7 @@ class SMA_SunnyBoy extends eqLogic {
 			$cron->setFunction('daemon');
 			$cron->setEnable(1);
 			$cron->setDeamon(1);
+          	$cron->setDeamonSleepTime(config::byKey('pollInterval', __CLASS__, 60));
 			$cron->setTimeout(1440);
 			$cron->setSchedule('* * * * *');
 			$cron->save();
@@ -64,17 +74,18 @@ class SMA_SunnyBoy extends eqLogic {
 	}
 
 	public static function daemon() {
-		$starttime = microtime(true);
+      	//gc_enable();
+      	log::add(__CLASS__, 'debug', "Memory_usage: ".memory_get_usage());
 		foreach (self::byType(__CLASS__, true) as $eqLogic) {
-          	$cmd = $eqLogic->getCmd(null, 'update');//retourne la commande 'update' si elle existe
-			if (is_object($cmd)) {//si la comande existe
-				$cmd->execCmd();//alors on l'execute
-			}
+          	//$cmd = $eqLogic->getCmd(null, 'update');//retourne la commande 'update' si elle existe
+			//if (is_object($cmd)) {//si la comande existe
+			//	$cmd->execCmd();//alors on l'execute
+			//}
+          	//unset($cmd);
+          	//unset($eqLogic);
+          	$eqLogic->getSmaData();
 		}
-		$endtime = microtime(true);
-		if ($endtime - $starttime < config::byKey('pollInterval', __CLASS__, 60, true)) {
-			usleep(floor((config::byKey('pollInterval', __CLASS__) + $starttime - $endtime) * 1000000));
-		}
+      	//gc_collect_cycles();
 	}
     
     /*     * *********************Méthodes d'instance************************* */
@@ -1277,12 +1288,15 @@ class SMA_SunnyBoy extends eqLogic {
 		$data = curl_exec($ch);
 		
 		if (curl_errno($ch)) {
-			curl_close ($ch);
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get equipment values: '.curl_error($ch));
 			$this->checkAndUpdateCmd('status', 'Erreur Données');
+          	curl_close($ch);
+          	//unset($ch);
+          	return;
 		} else {
           	$InverterKey = $this->get_string_between($data,'result":{"','"');
 		}
+      	//curl_close ($ch);
 		
 		if ($InverterKey == '') {
 			// LOGIN
@@ -1292,13 +1306,17 @@ class SMA_SunnyBoy extends eqLogic {
 			$data = curl_exec($ch);
 			if (curl_errno($ch)) {
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot login to equipment: '.curl_error($ch));
-				curl_close ($ch);
+				curl_close($ch);
+              	//unset($ch);
 				$this->checkAndUpdateCmd('status', 'Erreur Identification');
 				return;
 			} else {
-				curl_close ($ch);
+				curl_close($ch);
+              	//unset($ch);
 				$json = json_decode($data, true);
+              	//unset($data);
 				$SMA_SID = $json['result']['sid'];
+              	//unset($json);
 				$this->checkAndUpdateCmd('sessionID', $SMA_SID);
 				$this->checkAndUpdateCmd('status', 'Hors Ligne ...');
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Getting session ID ...');
@@ -1318,15 +1336,18 @@ class SMA_SunnyBoy extends eqLogic {
 				curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getValues.json?sid='.$SMA_SID);
 				$dataDC = curl_exec($ch);
   				$jsonDC = json_decode($dataDC, true);
+              	//unset($dataDC);
 				$currentDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['0']['val'])/1000),2);
 				$currentDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['1']['val'])/1000),2);
 				$voltageDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['0']['val'])/100),1);
 				$voltageDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['1']['val'])/100),1);
 				$powerDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['0']['val'])/1),0);
 				$powerDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['1']['val'])/1),0);
+              	//unset($jsonDC);
             }
 			
-			curl_close ($ch);
+			curl_close($ch);
+          	//unset($ch);
 
 			$json = json_decode($data, true);
 		
@@ -1344,6 +1365,8 @@ class SMA_SunnyBoy extends eqLogic {
            	$power_l1 = round(floatval(($json['result'][$InverterKey]['6100_40464000'][$typeID]['0']['val'])/1),0);
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
+          
+          	//unset($json);
 			
           	if ($DeviceType==30 || $DeviceType==40) {$this->checkAndUpdateCmd('balance', $balance);}
 			if ($DeviceType==10 || $DeviceType==20) {$this->checkAndUpdateCmd('pv_power', $pv_power);}
@@ -1369,6 +1392,8 @@ class SMA_SunnyBoy extends eqLogic {
 			$this->checkAndUpdateCmd('status', 'OK');
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
               
+          	//unset($data);
+          
 			return;
 		}
 		
