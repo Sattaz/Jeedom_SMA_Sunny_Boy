@@ -58,11 +58,11 @@ class SMA_SunnyBoy extends eqLogic {
 			$cron->setFunction('daemon');
 			$cron->setEnable(1);
 			$cron->setDeamon(1);
-          	$cron->setDeamonSleepTime(config::byKey('pollInterval', __CLASS__, 60));
 			$cron->setTimeout(1440);
 			$cron->setSchedule('* * * * *');
-			$cron->save();
 		}
+      	$cron->setDeamonSleepTime(config::byKey('pollInterval', __CLASS__, 60));
+      	$cron->save();
 		$cron->run();
 	}
 
@@ -83,6 +83,7 @@ class SMA_SunnyBoy extends eqLogic {
 			//}
           	//unset($cmd);
           	//unset($eqLogic);
+          	
           	$eqLogic->getSmaData();
 		}
       	log::add(__CLASS__, 'debug', "Memory_usage End: ".memory_get_usage());
@@ -1226,6 +1227,8 @@ class SMA_SunnyBoy extends eqLogic {
 		//http://pydoc.net/pysma/0.1.3/pysma/
 		//https://community.openhab.org/t/example-on-how-to-access-data-of-a-sunny-boy-sma-solar-inverter/50963/18
 		
+      	//log::add(__CLASS__, 'debug', "Memory_usage Before getConfiguration: ".memory_get_usage());
+      
 		$SMA_IP = $this->getConfiguration("IP");
 		$SMA_Port = $this->getConfiguration("Port");
       	$SMA_Protocol = $this->getConfiguration("Protocol");
@@ -1237,6 +1240,8 @@ class SMA_SunnyBoy extends eqLogic {
       	//Type 20 = Onduleur Triphasé
       	//Type 30 = Energy Meter Monophasé
       	//Type 40 = Energy Meter Triphasé
+      
+      	//log::add(__CLASS__, 'debug', "Memory_usage After getConfiguration: ".memory_get_usage());
       
 		if (strlen($SMA_IP) == 0) {
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> No IP defined for equipment!');
@@ -1258,7 +1263,7 @@ class SMA_SunnyBoy extends eqLogic {
 			$SMA_HTTP = 'https';
 		}
       
-      	log::add(__CLASS__, 'debug', "Memory_usage Config Loaded: ".memory_get_usage());
+      	//log::add(__CLASS__, 'debug', "Memory_usage Config Loaded: ".memory_get_usage());
 		
 		$SMA_RIGHT = 'usr';
 		$ch = curl_init();
@@ -1283,7 +1288,7 @@ class SMA_SunnyBoy extends eqLogic {
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get Session ID: '.$e);
 		}
       
-      	log::add(__CLASS__, 'debug', "Memory_usage Stored Session ID Retrieved: ".memory_get_usage());
+      	//log::add(__CLASS__, 'debug', "Memory_usage Stored Session ID Retrieved: ".memory_get_usage());
 		
 		// COLLECTING VALUES
 		$InverterKey = '';
@@ -1304,7 +1309,7 @@ class SMA_SunnyBoy extends eqLogic {
           	//unset($data);
         }
       
-      	log::add(__CLASS__, 'debug', "Memory_usage Collecting Values Completed: ".memory_get_usage());
+      	//log::add(__CLASS__, 'debug', "Memory_usage Collecting Values Completed: ".memory_get_usage());
 		
 		if ($InverterKey == '') {
 			// LOGIN
@@ -1332,7 +1337,7 @@ class SMA_SunnyBoy extends eqLogic {
 				return;
 			}
           
-          	log::add(__CLASS__, 'debug', "Memory_usage SMA Session ID Read Completed : ".memory_get_usage());
+          	//log::add(__CLASS__, 'debug', "Memory_usage SMA Session ID Read Completed : ".memory_get_usage());
 			
 		} else {
           
@@ -1354,13 +1359,13 @@ class SMA_SunnyBoy extends eqLogic {
 				$powerDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['0']['val'])/1),0);
 				$powerDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['1']['val'])/1),0);
               
-              	log::add(__CLASS__, 'debug', "Memory_usage DC Data Retrieved: ".memory_get_usage());
+              	//log::add(__CLASS__, 'debug', "Memory_usage DC Data Retrieved: ".memory_get_usage());
             }
 			
 			curl_close($ch);
           	unset($ch);
           
-          	log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, Start Of Assigning Values To Commands: ".memory_get_usage());
+          	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, Start Of Assigning Values To Commands: ".memory_get_usage());
 
 			$json = json_decode($data, true);
           			
@@ -1378,9 +1383,15 @@ class SMA_SunnyBoy extends eqLogic {
            	$power_l1 = round(floatval(($json['result'][$InverterKey]['6100_40464000'][$typeID]['0']['val'])/1),0);
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
-			
+          
+          	// jusqu'ici pas de memomy leak
+          
           	foreach ($this->getCmd('info') as $cmd) {
         		$cmdLogicalId = $cmd->getLogicalId();
+              	//$eq = $cmd->getEqLogic();
+              	//if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, intval($balance));}
+              
+              	// Dès lors qu'une commande est mise à jour il y a fuite ...
           		if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
 				if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
 				if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
@@ -1402,11 +1413,12 @@ class SMA_SunnyBoy extends eqLogic {
           		if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
 				if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
 				if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
+              	//unset($cmdLogicalId);
             }
          
-          	log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
+          	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
           
-			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
+			//log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
 
           	unset($data);
           	unset($dataDC);
