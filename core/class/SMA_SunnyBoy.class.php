@@ -1298,7 +1298,7 @@ class SMA_SunnyBoy extends eqLogic {
 		if (curl_errno($ch)) {
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get equipment values: '.curl_error($ch));
 			$this->checkAndUpdateCmd('status', 'Erreur Données');
-          	curl_close($ch);
+          	//curl_close($ch);
           	unset($ch);
           	unset($data);
           	return;
@@ -1312,6 +1312,15 @@ class SMA_SunnyBoy extends eqLogic {
 		if ($InverterKey == '') {
 			// LOGIN
           	$ch = curl_init(); //added
+         	$headers = array();
+			$headers[] = "Accept: application/json"; //added
+			$headers[] = "Accept-Charset: UTF-8"; //added
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); //added
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); //added
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //added
+			curl_setopt($ch, CURLOPT_POST, 1); //added
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); //added
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //added
 			$credentials = ('{"pass" : "'.$SMA_PASSWORD.'", "right" : "'.$SMA_RIGHT.'"}');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $credentials);
 			curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/login.json');
@@ -1349,6 +1358,15 @@ class SMA_SunnyBoy extends eqLogic {
        		//Get DC Data
           	if ($DeviceType==10 || $DeviceType==20) {
               	$ch = curl_init(); //added
+              	$headers = array();
+				$headers[] = "Accept: application/json"; //added
+				$headers[] = "Accept-Charset: UTF-8"; //added
+				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); //added
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); //added
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //added
+				curl_setopt($ch, CURLOPT_POST, 1); //added
+				curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); //added
+				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //added
   				$collection = ('{"destDev":[],"keys":["6380_40251E00","6380_40451F00","6380_40452100"]}');
 				curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
 				curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getValues.json?sid='.$SMA_SID);
