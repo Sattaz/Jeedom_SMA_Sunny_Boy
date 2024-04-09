@@ -75,19 +75,14 @@ class SMA_SunnyBoy extends eqLogic {
 
 	public static function daemon() {
       	gc_enable();
-      	log::add(__CLASS__, 'debug', "Memory_usage Start: ".memory_get_usage());
+      	$mem0 = memory_get_usage();
+      	log::add(__CLASS__, 'debug', "Memory_usage Start: $mem0");
 		foreach (self::byType(__CLASS__, true) as $eqLogic) {
-          	//$cmd = $eqLogic->getCmd(null, 'update');//retourne la commande 'update' si elle existe
-			//if (is_object($cmd)) {//si la comande existe
-			//	$cmd->execCmd();//alors on l'execute
-			//}
-          	//unset($cmd);
-          	//unset($eqLogic);
-          	
-          	$eqLogic->getSmaData();
+       		$eqLogic->getSmaData();
 		}
-      	log::add(__CLASS__, 'debug', "Memory_usage End: ".memory_get_usage());
-      	gc_collect_cycles();
+     	gc_collect_cycles();
+      	$mem1 = memory_get_usage();
+      	log::add(__CLASS__, 'debug', "Memory_usage End: $mem1 Conso: ".($mem1-$mem0));
 	}
     
     /*     * *********************Méthodes d'instance************************* */
@@ -1264,18 +1259,6 @@ class SMA_SunnyBoy extends eqLogic {
 		}
       
       	//log::add(__CLASS__, 'debug', "Memory_usage Config Loaded: ".memory_get_usage());
-		
-		$SMA_RIGHT = 'usr';
-		$ch = curl_init();
-		$headers = array();
-		$headers[] = "Accept: application/json";
-		$headers[] = "Accept-Charset: UTF-8";
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); 
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 		// READ STORED SESSION ID
 		try {
@@ -1289,6 +1272,19 @@ class SMA_SunnyBoy extends eqLogic {
 		}
       
       	//log::add(__CLASS__, 'debug', "Memory_usage Stored Session ID Retrieved: ".memory_get_usage());
+      
+      
+     	$SMA_RIGHT = 'usr';
+		$ch = curl_init();
+		$headers = array();
+		$headers[] = "Accept: application/json";
+		$headers[] = "Accept-Charset: UTF-8";
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); 
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		
 		// COLLECTING VALUES
 		$InverterKey = '';
@@ -1296,6 +1292,8 @@ class SMA_SunnyBoy extends eqLogic {
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
 		curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
+      	curl_close($ch); //added
+      	unset($ch); //added
 		
 		if (curl_errno($ch)) {
 			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get equipment values: '.curl_error($ch));
@@ -1313,20 +1311,23 @@ class SMA_SunnyBoy extends eqLogic {
 		
 		if ($InverterKey == '') {
 			// LOGIN
+          	$ch = curl_init(); //added
 			$credentials = ('{"pass" : "'.$SMA_PASSWORD.'", "right" : "'.$SMA_RIGHT.'"}');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $credentials);
 			curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/login.json');
 			$data = curl_exec($ch);
+          	curl_close($ch); //added
+          	unset($ch); //added
 			if (curl_errno($ch)) {
 				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot login to equipment: '.curl_error($ch));
-				curl_close($ch);
+				//curl_close($ch);
 				$this->checkAndUpdateCmd('status', 'Erreur Identification');
-              	unset($ch);
-              	unset($data);
+              	//unset($ch);
+              	//unset($data);
 				return;
 			} else {
-				curl_close($ch);
-              	unset($ch);
+				//curl_close($ch);
+              	//unset($ch);
 				$json = json_decode($data, true);
 				$SMA_SID = $json['result']['sid'];
 				$this->checkAndUpdateCmd('sessionID', $SMA_SID);
@@ -1347,10 +1348,13 @@ class SMA_SunnyBoy extends eqLogic {
           
        		//Get DC Data
           	if ($DeviceType==10 || $DeviceType==20) {
+              	$ch = curl_init(); //added
   				$collection = ('{"destDev":[],"keys":["6380_40251E00","6380_40451F00","6380_40452100"]}');
 				curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
 				curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getValues.json?sid='.$SMA_SID);
 				$dataDC = curl_exec($ch);
+              	curl_close($ch); //added
+          		unset($ch); //added
   				$jsonDC = json_decode($dataDC, true);
 				$currentDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['0']['val'])/1000),2);
 				$currentDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['1']['val'])/1000),2);
@@ -1362,8 +1366,8 @@ class SMA_SunnyBoy extends eqLogic {
               	//log::add(__CLASS__, 'debug', "Memory_usage DC Data Retrieved: ".memory_get_usage());
             }
 			
-			curl_close($ch);
-          	unset($ch);
+			//curl_close($ch);
+          	//unset($ch);
           
           	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, Start Of Assigning Values To Commands: ".memory_get_usage());
 
@@ -1384,14 +1388,14 @@ class SMA_SunnyBoy extends eqLogic {
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
           
+          	//$hdle = fopen(__DIR__ ."/dataDC.txt", "wb");
+			//if($hdle !== FALSE) { fwrite($hdle, $dataDC); fclose($hdle); }
+          
           	// jusqu'ici pas de memomy leak
           
           	foreach ($this->getCmd('info') as $cmd) {
         		$cmdLogicalId = $cmd->getLogicalId();
-              	//$eq = $cmd->getEqLogic();
-              	//if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, intval($balance));}
-              
-              	// Dès lors qu'une commande est mise à jour il y a fuite ...
+              	//if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, rand(10,15));}
           		if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
 				if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
 				if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
@@ -1415,15 +1419,15 @@ class SMA_SunnyBoy extends eqLogic {
 				if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
               	//unset($cmdLogicalId);
             }
-         
-          	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
           
-			//log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
-
           	unset($data);
           	unset($dataDC);
           	unset($json);
           	unset($jsonDC);
+         
+          	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
+          
+			//log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
                     
 			return;
 		}
