@@ -78,7 +78,31 @@ class SMA_SunnyBoy extends eqLogic {
       	$mem0 = memory_get_usage();
       	log::add(__CLASS__, 'debug', "Memory_usage Start: $mem0");
 		foreach (self::byType(__CLASS__, true) as $eqLogic) {
-       		$eqLogic->getSmaData();
+          	//$eqLogic->getSmaData();
+       		$data=$eqLogic->getSmaData();
+          	if ($data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('balance', $data['balance']);}
+			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('pv_power', $data['pv_power']);}
+			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('pv_total', $data['pv_total']);}
+			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('frequency', $data['frequency']);}
+			if ($data['DeviceType']==10 || $data['DeviceType']==20 || $data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('voltage_l1', $data['voltage_l1']);}
+			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('voltage_l2', $data['voltage_l2']);}
+			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('voltage_l3', $data['voltage_l3']);}
+			if ($data['DeviceType']==10 || $data['DeviceType']==20 || $data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('current_l1', $data['current_l1']);}
+			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('current_l2', $data['current_l2']);}
+			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('current_l3', $data['current_l3']);}
+        	if ($data['DeviceType']==10 || $data['DeviceType']==20 || $data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('power_l1', $data['power_l1']);}
+			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('power_l2', $data['power_l2']);}
+			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('power_l3', $data['power_l3']);}
+          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('voltageDC_A', $data['voltageDC_A']);}
+          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('voltageDC_B', $data['voltageDC_B']);}
+          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('currentDC_A', $data['currentDC_A']);}
+          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('currentDC_B', $data['currentDC_B']);}
+          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('powerDC_A', $data['powerDC_A']);}
+          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('powerDC_B', $data['powerDC_B']);}
+			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('wifi_signal', $data['wifi_signal']);}
+			$eqLogic->checkAndUpdateCmd('status', 'OK');
+          	unset($data);
+
 		}
      	gc_collect_cycles();
       	$mem1 = memory_get_usage();
@@ -1411,46 +1435,93 @@ class SMA_SunnyBoy extends eqLogic {
           
           	// jusqu'ici pas de memomy leak
           
-          	foreach ($this->getCmd('info') as $cmd) {
-        		$cmdLogicalId = $cmd->getLogicalId();
-              	//if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, rand(10,15));}
-          		if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
-				if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
-				if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
-				if ($cmdLogicalId == 'frequency' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $frequency);}
-				if ($cmdLogicalId == 'voltage_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l1);}
-				if ($cmdLogicalId == 'voltage_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l2);}
-				if ($cmdLogicalId == 'voltage_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l3);}
-				if ($cmdLogicalId == 'current_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l1);}
-				if ($cmdLogicalId == 'current_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l2);}
-				if ($cmdLogicalId == 'current_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l3);}
-        		if ($cmdLogicalId == 'power_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l1);}
-				if ($cmdLogicalId == 'power_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l2);}
-				if ($cmdLogicalId == 'power_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l3);}
-          		if ($cmdLogicalId == 'voltageDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_A);}
-          		if ($cmdLogicalId == 'voltageDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_B);}
-          		if ($cmdLogicalId == 'currentDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_A);}
-          		if ($cmdLogicalId == 'currentDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_B);}
-          		if ($cmdLogicalId == 'powerDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_A);}
-          		if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
-				if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
-				if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
-              	//unset($cmdLogicalId);
-            }
+          	//$this->updateCommands($DeviceType, $balance, $pv_power, $pv_total, $frequency, $voltage_l1, $voltage_l2, $voltage_l3, $current_l1, $current_l2, $current_l3, $power_l1, $power_l2, $power_l3, $voltageDC_A, $voltageDC_B, $currentDC_A, $currentDC_B, $powerDC_A, $powerDC_B, $wifi_signal);
+          
+          	//foreach ($this->getCmd('info') as $cmd) {
+        	//	$cmdLogicalId = $cmd->getLogicalId();
+          	//	if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
+			//	if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
+			//	if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
+			//	if ($cmdLogicalId == 'frequency' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $frequency);}
+			//	if ($cmdLogicalId == 'voltage_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l1);}
+			//	if ($cmdLogicalId == 'voltage_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l2);}
+			//	if ($cmdLogicalId == 'voltage_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l3);}
+			//	if ($cmdLogicalId == 'current_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l1);}
+			//	if ($cmdLogicalId == 'current_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l2);}
+			//	if ($cmdLogicalId == 'current_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l3);}
+        	//	if ($cmdLogicalId == 'power_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l1);}
+			//	if ($cmdLogicalId == 'power_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l2);}
+			//	if ($cmdLogicalId == 'power_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l3);}
+          	//	if ($cmdLogicalId == 'voltageDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_A);}
+          	//	if ($cmdLogicalId == 'voltageDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_B);}
+          	//	if ($cmdLogicalId == 'currentDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_A);}
+          	//	if ($cmdLogicalId == 'currentDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_B);}
+          	//	if ($cmdLogicalId == 'powerDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_A);}
+          	//	if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
+			//	if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
+			//	if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
+            //  	//unset($cmdLogicalId);
+            //}
           
           	unset($data);
           	unset($dataDC);
           	unset($json);
           	unset($jsonDC);
-         
-          	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, End Of Assigning Values To Commands: ".memory_get_usage());
+           
+          	$out['DeviceType'] = $DeviceType;
+    		$out['balance'] = $balance;
+    		$out['pv_power'] = $pv_power;
+          	$out['pv_total'] = $pv_total;
+          	$out['frequency'] = $frequency;
+          	$out['voltage_l1'] = $voltage_l1;
+          	$out['voltage_l2'] = $voltage_l2;
+          	$out['voltage_l3'] = $voltage_l3;
+          	$out['current_l1'] = $current_l1;
+          	$out['current_l2'] = $current_l2;
+          	$out['current_l3'] = $current_l3;
+          	$out['power_l1'] = $power_l1;
+          	$out['power_l2'] = $power_l2;
+          	$out['power_l3'] = $power_l3;
+          	$out['voltageDC_A'] = $voltageDC_A;
+          	$out['voltageDC_B'] = $voltageDC_B;
+          	$out['currentDC_A'] = $currentDC_A;
+          	$out['currentDC_B'] = $currentDC_B;
+          	$out['powerDC_A'] = $powerDC_A;
+          	$out['powerDC_B'] = $powerDC_B;
+          	$out['wifi_signal'] = $wifi_signal;
+    		return $out;
           
-			//log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
-                    
-			return;
+			//return;
 		}
 		
 	}
+  
+  	public function updateCommands($DeviceType, $balance, $pv_power, $pv_total, $frequency, $voltage_l1, $voltage_l2, $voltage_l3, $current_l1, $current_l2, $current_l3, $power_l1, $power_l2, $power_l3, $voltageDC_A, $voltageDC_B, $currentDC_A, $currentDC_B, $powerDC_A, $powerDC_B, $wifi_signal){
+  		foreach ($this->getCmd('info') as $cmd) {
+       		$cmdLogicalId = $cmd->getLogicalId();
+         	if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
+			if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
+			if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
+			if ($cmdLogicalId == 'frequency' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $frequency);}
+			if ($cmdLogicalId == 'voltage_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l1);}
+			if ($cmdLogicalId == 'voltage_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l2);}
+			if ($cmdLogicalId == 'voltage_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l3);}
+			if ($cmdLogicalId == 'current_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l1);}
+			if ($cmdLogicalId == 'current_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l2);}
+			if ($cmdLogicalId == 'current_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l3);}
+        	if ($cmdLogicalId == 'power_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l1);}
+			if ($cmdLogicalId == 'power_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l2);}
+			if ($cmdLogicalId == 'power_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l3);}
+          	if ($cmdLogicalId == 'voltageDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_A);}
+          	if ($cmdLogicalId == 'voltageDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_B);}
+          	if ($cmdLogicalId == 'currentDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_A);}
+          	if ($cmdLogicalId == 'currentDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_B);}
+          	if ($cmdLogicalId == 'powerDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_A);}
+          	if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
+			if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
+			if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
+  		}
+    }
 	
     /*
      * Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
