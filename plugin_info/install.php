@@ -26,14 +26,16 @@ function SMA_SunnyBoy_install() {
 		$cron->setFunction('daemon');
 		$cron->setEnable(1);
 		$cron->setDeamon(1);
+      	$cron->setSchedule('* * * * *');
 		$cron->setTimeout(1440);
-		$cron->setSchedule('* * * * *');
-		$cron->save();
+      	
 	}
-	if (config::byKey('pollInterval','SMA_SunnyBoy') == ''){
+    if (config::byKey('pollInterval','SMA_SunnyBoy') == ''){
 		config::save('pollInterval', 30, 'SMA_SunnyBoy');
 	}
-	$cron->start();
+  	$cron->setDeamonSleepTime(config::byKey('pollInterval', 'SMA_SunnyBoy', 30));
+  	$cron->save();
+  	$cron->start();
 }
 
 function SMA_SunnyBoy_update() {
@@ -44,15 +46,16 @@ function SMA_SunnyBoy_update() {
 		$cron->setFunction('daemon');
 		$cron->setEnable(1);
 		$cron->setDeamon(1);
-		$cron->setDeamonSleepTime(1);
 		$cron->setSchedule('* * * * *');
 		$cron->setTimeout(1440);
-		$cron->save();
+      	
 	}
-	if (config::byKey('pollInterval', 'SMA_SunnyBoy','') == '') {
+  	if (config::byKey('pollInterval', 'SMA_SunnyBoy','') == '') {
 		config::save('pollInterval', 30, 'SMA_SunnyBoy');
 	}
-	$cron->start();
+  	$cron->setDeamonSleepTime(config::byKey('pollInterval', 'SMA_SunnyBoy', 30));
+  	$cron->save();
+  	$cron->start();
 }
 
 function SMA_SunnyBoy_remove() {
