@@ -70,9 +70,6 @@ class SMA_SunnyBoy extends eqLogic {
 				continue;
 			}
 			if ($eqLogic->getIsEnable() == 0) {
-				$eqLogic->refresh();
-			}
-			if ($eqLogic->getIsEnable() == 0) {
 				continue;
 			}
 			try {
