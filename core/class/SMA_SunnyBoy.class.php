@@ -23,16 +23,8 @@ class SMA_SunnyBoy extends eqLogic {
     /*     * *************************Attributs****************************** */
 
     /*     * ***********************Methode static*************************** */
+	private static $_eqLogics = null;
   
-  	public static function cronHourly() {
-    	$h = date('G');
-    	if($h == 2) { // Redemarrage du deamon a 2h du matin chaque jour cause fuite memoire
-          	log::add(__CLASS__, 'debug', "Deamon: restarting ...");
-			self::deamon_start();
-          	log::add(__CLASS__, 'debug', "Deamon: restarted!");
-    	}
-  	}
-
   	public static function deamon_info() {
 		$return = array();
 		$return['log'] = '';
@@ -52,61 +44,54 @@ class SMA_SunnyBoy extends eqLogic {
 			throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
 		}
 		$cron = cron::byClassAndFunction(__CLASS__, 'daemon');
-		if (!is_object($cron)) {
-			$cron = new cron();
-			$cron->setClass(__CLASS__);
-			$cron->setFunction('daemon');
-			$cron->setEnable(1);
-			$cron->setDeamon(1);
-			$cron->setTimeout(1440);
-			$cron->setSchedule('* * * * *');
+     	if (!is_object($cron)) {
+			throw new Exception(__('Tache cron introuvable', __FILE__));
 		}
-      	$cron->setDeamonSleepTime(config::byKey('pollInterval', __CLASS__, 60));
+     	$cron->setDeamonSleepTime(config::byKey('pollInterval', __CLASS__, 30));
       	$cron->save();
 		$cron->run();
 	}
 
 	public static function deamon_stop() {
 		$cron = cron::byClassAndFunction(__CLASS__, 'daemon');
-		if (is_object($cron)) {
-			$cron->halt();
+		if (!is_object($cron)) {
+			throw new Exception(__('Tache cron introuvable', __FILE__));
 		}
+      	$cron->halt();
 	}
 
 	public static function daemon() {
-      	gc_enable();
-      	$mem0 = memory_get_usage();
-      	log::add(__CLASS__, 'debug', "Memory_usage Start: $mem0");
-		foreach (self::byType(__CLASS__, true) as $eqLogic) {
-          	//$eqLogic->getSmaData();
-       		$data=$eqLogic->getSmaData();
-          	if ($data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('balance', $data['balance']);}
-			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('pv_power', $data['pv_power']);}
-			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('pv_total', $data['pv_total']);}
-			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('frequency', $data['frequency']);}
-			if ($data['DeviceType']==10 || $data['DeviceType']==20 || $data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('voltage_l1', $data['voltage_l1']);}
-			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('voltage_l2', $data['voltage_l2']);}
-			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('voltage_l3', $data['voltage_l3']);}
-			if ($data['DeviceType']==10 || $data['DeviceType']==20 || $data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('current_l1', $data['current_l1']);}
-			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('current_l2', $data['current_l2']);}
-			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('current_l3', $data['current_l3']);}
-        	if ($data['DeviceType']==10 || $data['DeviceType']==20 || $data['DeviceType']==30 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('power_l1', $data['power_l1']);}
-			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('power_l2', $data['power_l2']);}
-			if ($data['DeviceType']==20 || $data['DeviceType']==40) {$eqLogic->checkAndUpdateCmd('power_l3', $data['power_l3']);}
-          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('voltageDC_A', $data['voltageDC_A']);}
-          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('voltageDC_B', $data['voltageDC_B']);}
-          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('currentDC_A', $data['currentDC_A']);}
-          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('currentDC_B', $data['currentDC_B']);}
-          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('powerDC_A', $data['powerDC_A']);}
-          	if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('powerDC_B', $data['powerDC_B']);}
-			if ($data['DeviceType']==10 || $data['DeviceType']==20) {$eqLogic->checkAndUpdateCmd('wifi_signal', $data['wifi_signal']);}
-			$eqLogic->checkAndUpdateCmd('status', 'OK');
-          	unset($data);
-
+		$mem0 = memory_get_usage();
+     	if (self::$_eqLogics == null) {
+			self::$_eqLogics = self::byType(__CLASS__);
 		}
-     	gc_collect_cycles();
+      	foreach (self::$_eqLogics as &$eqLogic) {
+			if ($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) {
+				continue;
+			}
+			if ($eqLogic->getIsEnable() == 0) {
+				$eqLogic->refresh();
+			}
+			if ($eqLogic->getIsEnable() == 0) {
+				continue;
+			}
+			try {
+              	
+              	$eqLogic->getSmaData($eqLogic);
+
+            } catch (Error $ex) {
+				if ($_eqLogic_id != null) {
+					log::add(__CLASS__, 'debug', $ex->getMessage());
+				} else {
+					$eqLogic->refresh();
+					if ($eqLogic->getIsEnable() == 0) {
+						continue;
+					}
+				}
+			}
+        }  
       	$mem1 = memory_get_usage();
-      	log::add(__CLASS__, 'debug', "Memory_usage End: $mem1 Conso: ".($mem1-$mem0));
+      	log::add(__CLASS__, 'debug', "Memory Usage: ".($mem1-$mem0));
 	}
     
     /*     * *********************Méthodes d'instance************************* */
@@ -1239,38 +1224,35 @@ class SMA_SunnyBoy extends eqLogic {
 		return substr($string, $ini, $len);
 	}
 	
-	public function getSmaData() {
+	public function getSmaData($eqLogic) {
+		
 		//REFERENCES
 		//Generated by curl-to-PHP: http://incarnate.github.io/curl-to-php/
 		//https://community.home-assistant.io/t/presenting-sma-converter-values/5033/3
 		//http://pydoc.net/pysma/0.1.3/pysma/
 		//https://community.openhab.org/t/example-on-how-to-access-data-of-a-sunny-boy-sma-solar-inverter/50963/18
-		
-      	//log::add(__CLASS__, 'debug', "Memory_usage Before getConfiguration: ".memory_get_usage());
-      
-		$SMA_IP = $this->getConfiguration("IP");
-		$SMA_Port = $this->getConfiguration("Port");
-      	$SMA_Protocol = $this->getConfiguration("Protocol");
-		$SMA_PASSWORD = $this->getConfiguration("Password");
+              
+     	$SMA_IP = $eqLogic->getConfiguration("IP");
+		$SMA_Port = $eqLogic->getConfiguration("Port");
+      	$SMA_Protocol = $eqLogic->getConfiguration("Protocol");
+		$SMA_PASSWORD = $eqLogic->getConfiguration("Password");
 		$SMA_HTTP = '';
 		
-     	$DeviceType = $this->getConfiguration("DeviceType");
+     	$DeviceType = $eqLogic->getConfiguration("DeviceType");
       	//Type 10 = Onduleur Monophasé
       	//Type 20 = Onduleur Triphasé
       	//Type 30 = Energy Meter Monophasé
       	//Type 40 = Energy Meter Triphasé
       
-      	//log::add(__CLASS__, 'debug', "Memory_usage After getConfiguration: ".memory_get_usage());
-      
-		if (strlen($SMA_IP) == 0) {
-			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> No IP defined for equipment!');
+      	if (strlen($SMA_IP) == 0) {
+			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> No IP defined for equipment!');
 			return;
 		}
 		
 		if (strlen($SMA_PASSWORD) == 0) {
-			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> No password defined for equipment!');
+			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> No password defined for equipment!');
 			return;
-		}
+				}
 		
 		if (strlen($SMA_Port) == 0) {
 			$SMA_Port = 443;
@@ -1281,24 +1263,20 @@ class SMA_SunnyBoy extends eqLogic {
 		} else {
 			$SMA_HTTP = 'https';
 		}
-      
-      	//log::add(__CLASS__, 'debug', "Memory_usage Config Loaded: ".memory_get_usage());
 
 		// READ STORED SESSION ID
 		try {
-			$cmd = $this->getCmd(null, 'sessionID'); // On recherche la commande refresh de l’équipement
-			if (is_object($cmd)) { //elle existe et on lance la commande
+			$cmd = $eqLogic->getCmd(null, 'sessionID');
+			if (is_object($cmd)) {
 				$SMA_SID = $cmd->execCmd();
 			}
 		} catch (Exception $e) {
 			$SMA_SID = '';
-			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get Session ID: '.$e);
+			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> Cannot get Session ID: '.$e);
+        	return;
 		}
-      
-      	//log::add(__CLASS__, 'debug', "Memory_usage Stored Session ID Retrieved: ".memory_get_usage());
-      
-      
-     	$SMA_RIGHT = 'usr';
+              
+		$SMA_RIGHT = 'usr';
 		$ch = curl_init();
 		$headers = array();
 		$headers[] = "Accept: application/json";
@@ -1311,110 +1289,96 @@ class SMA_SunnyBoy extends eqLogic {
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		
 		// COLLECTING VALUES
-		$InverterKey = '';
+		//$InverterKey = '';
 		$collection = ('{"destDev":[],"keys":[]}');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
 		curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getAllOnlValues.json?sid='.$SMA_SID);
 		$data = curl_exec($ch);
-      	curl_close($ch); //added
-      	unset($ch); //added
 		
 		if (curl_errno($ch)) {
-			log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot get equipment values: '.curl_error($ch));
-			$this->checkAndUpdateCmd('status', 'Erreur Données');
-          	//curl_close($ch);
-          	unset($ch);
-          	unset($data);
-          	return;
-		} else {
-          	$InverterKey = $this->get_string_between($data,'result":{"','"');
-          	//unset($data);
-        }
-      
-      	//log::add(__CLASS__, 'debug', "Memory_usage Collecting Values Completed: ".memory_get_usage());
+			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> Cannot get equipment values: '.curl_error($ch));
+        	curl_close ($ch);
+            unset($ch);
+            return;
+    	}
+      	curl_close ($ch);
+        unset($ch);
 		
+      	$InverterKey = $eqLogic->get_string_between($data,'result":{"','"');
+      
 		if ($InverterKey == '') {
 			// LOGIN
-          	$ch = curl_init(); //added
-         	$headers = array();
-			$headers[] = "Accept: application/json"; //added
-			$headers[] = "Accept-Charset: UTF-8"; //added
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); //added
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); //added
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //added
-			curl_setopt($ch, CURLOPT_POST, 1); //added
-			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); //added
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //added
+        	$ch = curl_init();
+			$headers = array();
+			$headers[] = "Accept: application/json";
+			$headers[] = "Accept-Charset: UTF-8";
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); 
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 			$credentials = ('{"pass" : "'.$SMA_PASSWORD.'", "right" : "'.$SMA_RIGHT.'"}');
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $credentials);
 			curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/login.json');
 			$data = curl_exec($ch);
-          	curl_close($ch); //added
-          	unset($ch); //added
 			if (curl_errno($ch)) {
-				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Cannot login to equipment: '.curl_error($ch));
-				//curl_close($ch);
-				$this->checkAndUpdateCmd('status', 'Erreur Identification');
-              	//unset($ch);
-              	//unset($data);
+				log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> Cannot login to equipment: '.curl_error($ch));
+				curl_close ($ch);
+            	unset($ch);
+				$eqLogic->checkAndUpdateCmd('status', 'Erreur Identification');
 				return;
 			} else {
-				//curl_close($ch);
-              	//unset($ch);
+            	curl_close ($ch);
+                unset($ch);
 				$json = json_decode($data, true);
 				$SMA_SID = $json['result']['sid'];
-				$this->checkAndUpdateCmd('sessionID', $SMA_SID);
-				$this->checkAndUpdateCmd('status', 'Hors Ligne ...');
-				log::add('SMA_SunnyBoy', 'debug', $this->getHumanName().' -> Getting session ID ...');
-              	unset($data);
-              	unset($json);
+				$eqLogic->checkAndUpdateCmd('sessionID', $SMA_SID);
+				$eqLogic->checkAndUpdateCmd('status', 'Hors Ligne ...');
+				log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> Getting session ID ...');
 				return;
 			}
-          
-          	//log::add(__CLASS__, 'debug', "Memory_usage SMA Session ID Read Completed : ".memory_get_usage());
-			
 		} else {
-          
-			$typeID = 0;
+        	$typeID = 0;
           	if ($DeviceType==10 || $DeviceType==20) {$typeID=1;}
           	if ($DeviceType==30 || $DeviceType==40) {$typeID=65;}
           
-       		//Get DC Data
+          	//Get DC Data
           	if ($DeviceType==10 || $DeviceType==20) {
-              	$ch = curl_init(); //added
-              	$headers = array();
-				$headers[] = "Accept: application/json"; //added
-				$headers[] = "Accept-Charset: UTF-8"; //added
-				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); //added
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); //added
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //added
-				curl_setopt($ch, CURLOPT_POST, 1); //added
-				curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); //added
-				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //added
+            	$ch = curl_init();
+				$headers = array();
+				$headers[] = "Accept: application/json";
+				$headers[] = "Accept-Charset: UTF-8";
+				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($ch, CURLOPT_POST, 1);
+				curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY); 
+				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
   				$collection = ('{"destDev":[],"keys":["6380_40251E00","6380_40451F00","6380_40452100"]}');
 				curl_setopt($ch, CURLOPT_POSTFIELDS, $collection);
 				curl_setopt($ch, CURLOPT_URL, $SMA_HTTP.'://'.$SMA_IP.':'.$SMA_Port.'/dyn/getValues.json?sid='.$SMA_SID);
 				$dataDC = curl_exec($ch);
-              	curl_close($ch); //added
-          		unset($ch); //added
-  				$jsonDC = json_decode($dataDC, true);
-				$currentDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['0']['val'])/1000),2);
-				$currentDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['1']['val'])/1000),2);
-				$voltageDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['0']['val'])/100),1);
-				$voltageDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['1']['val'])/100),1);
-				$powerDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['0']['val'])/1),0);
-				$powerDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['1']['val'])/1),0);
-              
-              	//log::add(__CLASS__, 'debug', "Memory_usage DC Data Retrieved: ".memory_get_usage());
-            }
-			
-			//curl_close($ch);
-          	//unset($ch);
-          
-          	//log::add(__CLASS__, 'debug', "Memory_usage Last CURL Closed, Start Of Assigning Values To Commands: ".memory_get_usage());
+                if (curl_errno($ch)) {
+					log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> Cannot get DC data: '.curl_error($ch));
+					curl_close ($ch);
+                	unset($ch);
+					return;
+				} else {
+                	curl_close ($ch);
+                  	unset($ch);
+  					$jsonDC = json_decode($dataDC, true);
+					$currentDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['0']['val'])/1000),2);
+					$currentDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40452100'][$typeID]['1']['val'])/1000),2);
+					$voltageDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['0']['val'])/100),1);
+					$voltageDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40451F00'][$typeID]['1']['val'])/100),1);
+					$powerDC_A = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['0']['val'])/1),0);
+					$powerDC_B = round(floatval(($jsonDC['result'][$InverterKey]['6380_40251E00'][$typeID]['1']['val'])/1),0);
+            	}
+			}
 
 			$json = json_decode($data, true);
-          			
+		
           	$balance = round(($json['result'][$InverterKey]['6100_40263F00'][$typeID]['0']['val']) * -1,0);
 			$pv_power = round($json['result'][$InverterKey]['6100_0046C200'][$typeID]['0']['val'],0);
 			$pv_total = round(($json['result'][$InverterKey]['6400_00260100'][$typeID]['0']['val'])/1,0);
@@ -1429,99 +1393,32 @@ class SMA_SunnyBoy extends eqLogic {
            	$power_l1 = round(floatval(($json['result'][$InverterKey]['6100_40464000'][$typeID]['0']['val'])/1),0);
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
-          
-          	//$hdle = fopen(__DIR__ ."/dataDC.txt", "wb");
-			//if($hdle !== FALSE) { fwrite($hdle, $dataDC); fclose($hdle); }
-          
-          	// jusqu'ici pas de memomy leak
-          
-          	//$this->updateCommands($DeviceType, $balance, $pv_power, $pv_total, $frequency, $voltage_l1, $voltage_l2, $voltage_l3, $current_l1, $current_l2, $current_l3, $power_l1, $power_l2, $power_l3, $voltageDC_A, $voltageDC_B, $currentDC_A, $currentDC_B, $powerDC_A, $powerDC_B, $wifi_signal);
-          
-          	//foreach ($this->getCmd('info') as $cmd) {
-        	//	$cmdLogicalId = $cmd->getLogicalId();
-          	//	if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
-			//	if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
-			//	if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
-			//	if ($cmdLogicalId == 'frequency' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $frequency);}
-			//	if ($cmdLogicalId == 'voltage_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l1);}
-			//	if ($cmdLogicalId == 'voltage_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l2);}
-			//	if ($cmdLogicalId == 'voltage_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l3);}
-			//	if ($cmdLogicalId == 'current_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l1);}
-			//	if ($cmdLogicalId == 'current_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l2);}
-			//	if ($cmdLogicalId == 'current_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l3);}
-        	//	if ($cmdLogicalId == 'power_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l1);}
-			//	if ($cmdLogicalId == 'power_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l2);}
-			//	if ($cmdLogicalId == 'power_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l3);}
-          	//	if ($cmdLogicalId == 'voltageDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_A);}
-          	//	if ($cmdLogicalId == 'voltageDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_B);}
-          	//	if ($cmdLogicalId == 'currentDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_A);}
-          	//	if ($cmdLogicalId == 'currentDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_B);}
-          	//	if ($cmdLogicalId == 'powerDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_A);}
-          	//	if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
-			//	if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
-			//	if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
-            //  	//unset($cmdLogicalId);
-            //}
-          
-          	unset($data);
-          	unset($dataDC);
-          	unset($json);
-          	unset($jsonDC);
-           
-          	$out['DeviceType'] = $DeviceType;
-    		$out['balance'] = $balance;
-    		$out['pv_power'] = $pv_power;
-          	$out['pv_total'] = $pv_total;
-          	$out['frequency'] = $frequency;
-          	$out['voltage_l1'] = $voltage_l1;
-          	$out['voltage_l2'] = $voltage_l2;
-          	$out['voltage_l3'] = $voltage_l3;
-          	$out['current_l1'] = $current_l1;
-          	$out['current_l2'] = $current_l2;
-          	$out['current_l3'] = $current_l3;
-          	$out['power_l1'] = $power_l1;
-          	$out['power_l2'] = $power_l2;
-          	$out['power_l3'] = $power_l3;
-          	$out['voltageDC_A'] = $voltageDC_A;
-          	$out['voltageDC_B'] = $voltageDC_B;
-          	$out['currentDC_A'] = $currentDC_A;
-          	$out['currentDC_B'] = $currentDC_B;
-          	$out['powerDC_A'] = $powerDC_A;
-          	$out['powerDC_B'] = $powerDC_B;
-          	$out['wifi_signal'] = $wifi_signal;
-    		return $out;
-          
-			//return;
+			
+          	if ($DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('balance', $balance);}
+			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('pv_power', $pv_power);}
+			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('pv_total', $pv_total);}
+			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('frequency', $frequency);}
+			if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('voltage_l1', $voltage_l1);}
+			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('voltage_l2', $voltage_l2);}
+			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('voltage_l3', $voltage_l3);}
+			if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('current_l1', $current_l1);}
+			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('current_l2', $current_l2);}
+			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('current_l3', $current_l3);}
+        	if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('power_l1', $power_l1);}
+			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('power_l2', $power_l2);}
+			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('power_l3', $power_l3);}
+          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('voltageDC_A', $voltageDC_A);}
+          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('voltageDC_B', $voltageDC_B);}
+          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('currentDC_A', $currentDC_A);}
+          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('currentDC_B', $currentDC_B);}
+          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('powerDC_A', $powerDC_A);}
+          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('powerDC_B', $powerDC_B);}
+			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('wifi_signal', $wifi_signal);}
+			$eqLogic->checkAndUpdateCmd('status', 'OK');
+			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
 		}
-		
+      return;
 	}
-  
-  	public function updateCommands($DeviceType, $balance, $pv_power, $pv_total, $frequency, $voltage_l1, $voltage_l2, $voltage_l3, $current_l1, $current_l2, $current_l3, $power_l1, $power_l2, $power_l3, $voltageDC_A, $voltageDC_B, $currentDC_A, $currentDC_B, $powerDC_A, $powerDC_B, $wifi_signal){
-  		foreach ($this->getCmd('info') as $cmd) {
-       		$cmdLogicalId = $cmd->getLogicalId();
-         	if ($cmdLogicalId == 'balance' && ($DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $balance);}
-			if ($cmdLogicalId == 'pv_power' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_power);}
-			if ($cmdLogicalId == 'pv_total' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $pv_total);}
-			if ($cmdLogicalId == 'frequency' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $frequency);}
-			if ($cmdLogicalId == 'voltage_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l1);}
-			if ($cmdLogicalId == 'voltage_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l2);}
-			if ($cmdLogicalId == 'voltage_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $voltage_l3);}
-			if ($cmdLogicalId == 'current_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l1);}
-			if ($cmdLogicalId == 'current_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l2);}
-			if ($cmdLogicalId == 'current_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $current_l3);}
-        	if ($cmdLogicalId == 'power_l1' && ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l1);}
-			if ($cmdLogicalId == 'power_l2' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l2);}
-			if ($cmdLogicalId == 'power_l3' && ($DeviceType==20 || $DeviceType==40)) {$this->checkAndUpdateCmd($cmd, $power_l3);}
-          	if ($cmdLogicalId == 'voltageDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_A);}
-          	if ($cmdLogicalId == 'voltageDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $voltageDC_B);}
-          	if ($cmdLogicalId == 'currentDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_A);}
-          	if ($cmdLogicalId == 'currentDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $currentDC_B);}
-          	if ($cmdLogicalId == 'powerDC_A' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_A);}
-          	if ($cmdLogicalId == 'powerDC_B' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $powerDC_B);}
-			if ($cmdLogicalId == 'wifi_signal' && ($DeviceType==10 || $DeviceType==20)) {$this->checkAndUpdateCmd($cmd, $wifi_signal);}
-			if ($cmdLogicalId == 'status') {$this->checkAndUpdateCmd($cmd, 'OK');}
-  		}
-    }
 	
     /*
      * Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
