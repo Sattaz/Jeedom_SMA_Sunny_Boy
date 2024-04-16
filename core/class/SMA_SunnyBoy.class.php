@@ -61,13 +61,18 @@ class SMA_SunnyBoy extends eqLogic {
 	}
 
 	public static function daemon() {
+      	gc_enable();
 		$mem0 = memory_get_usage();
+      	log::add(__CLASS__, 'debug', "Memory Start Cycle: ".$mem0);
      	if (self::$_eqLogics == null) {
 			self::$_eqLogics = self::byType(__CLASS__);
 		}
       	foreach (self::$_eqLogics as &$eqLogic) {
 			if ($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) {
 				continue;
+			}
+			if ($eqLogic->getIsEnable() == 0) {
+				$eqLogic->refresh();
 			}
 			if ($eqLogic->getIsEnable() == 0) {
 				continue;
@@ -86,7 +91,8 @@ class SMA_SunnyBoy extends eqLogic {
 					}
 				}
 			}
-        }  
+        }
+      	gc_collect_cycles();
       	$mem1 = memory_get_usage();
       	log::add(__CLASS__, 'debug', "Memory Usage: ".($mem1-$mem0));
 	}
@@ -1391,27 +1397,31 @@ class SMA_SunnyBoy extends eqLogic {
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
 			
-          	if ($DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('balance', $balance);}
-			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('pv_power', $pv_power);}
-			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('pv_total', $pv_total);}
-			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('frequency', $frequency);}
-			if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('voltage_l1', $voltage_l1);}
-			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('voltage_l2', $voltage_l2);}
-			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('voltage_l3', $voltage_l3);}
-			if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('current_l1', $current_l1);}
-			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('current_l2', $current_l2);}
-			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('current_l3', $current_l3);}
-        	if ($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('power_l1', $power_l1);}
-			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('power_l2', $power_l2);}
-			if ($DeviceType==20 || $DeviceType==40) {$eqLogic->checkAndUpdateCmd('power_l3', $power_l3);}
-          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('voltageDC_A', $voltageDC_A);}
-          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('voltageDC_B', $voltageDC_B);}
-          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('currentDC_A', $currentDC_A);}
-          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('currentDC_B', $currentDC_B);}
-          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('powerDC_A', $powerDC_A);}
-          	if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('powerDC_B', $powerDC_B);}
-			if ($DeviceType==10 || $DeviceType==20) {$eqLogic->checkAndUpdateCmd('wifi_signal', $wifi_signal);}
-			$eqLogic->checkAndUpdateCmd('status', 'OK');
+         	foreach($eqLogic->getCmd('info') as $cmd) {
+      			$cmdLogicalId = $cmd->getLogicalId();
+      			if(($DeviceType==30 || $DeviceType==40) && $cmdLogicalId == 'balance') $eqLogic->checkAndUpdateCmd($cmd, $balance); 
+      			else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'pv_power') $eqLogic->checkAndUpdateCmd($cmd, $pv_power); 
+      			else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'pv_total') $eqLogic->checkAndUpdateCmd($cmd, $pv_total); 
+      			else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'frequency') $eqLogic->checkAndUpdateCmd($cmd, $frequency); 
+      			else if(($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) && $cmdLogicalId == 'voltage_l1') $eqLogic->checkAndUpdateCmd($cmd, $voltage_l1); 
+      			else if(($DeviceType==20 || $DeviceType==40) && $cmdLogicalId == 'voltage_l2') $eqLogic->checkAndUpdateCmd($cmd, $voltage_l2); 
+      			else if(($DeviceType==20 || $DeviceType==40) && $cmdLogicalId == 'voltage_l3') $eqLogic->checkAndUpdateCmd($cmd, $voltage_l3);
+              	else if(($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) && $cmdLogicalId == 'current_l1') $eqLogic->checkAndUpdateCmd($cmd, $current_l1);
+              	else if(($DeviceType==20 || $DeviceType==40) && $cmdLogicalId == 'current_l2') $eqLogic->checkAndUpdateCmd($cmd, $current_l2);
+              	else if(($DeviceType==20 || $DeviceType==40) && $cmdLogicalId == 'current_l3') $eqLogic->checkAndUpdateCmd($cmd, $current_l3);
+              	else if(($DeviceType==10 || $DeviceType==20 || $DeviceType==30 || $DeviceType==40) && $cmdLogicalId == 'power_l1') $eqLogic->checkAndUpdateCmd($cmd, $power_l1);
+              	else if(($DeviceType==20 || $DeviceType==40) && $cmdLogicalId == 'power_l2') $eqLogic->checkAndUpdateCmd($cmd, $power_l2);
+             	else if(($DeviceType==20 || $DeviceType==40) && $cmdLogicalId == 'power_l3') $eqLogic->checkAndUpdateCmd($cmd, $power_l3);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'voltageDC_A') $eqLogic->checkAndUpdateCmd($cmd, $voltageDC_A);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'voltageDC_B') $eqLogic->checkAndUpdateCmd($cmd, $voltageDC_B);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'currentDC_A') $eqLogic->checkAndUpdateCmd($cmd, $currentDC_A);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'currentDC_B') $eqLogic->checkAndUpdateCmd($cmd, $currentDC_B);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'powerDC_A') $eqLogic->checkAndUpdateCmd($cmd, $powerDC_A);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'powerDC_B') $eqLogic->checkAndUpdateCmd($cmd, $powerDC_B);
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'wifi_signal') $eqLogic->checkAndUpdateCmd($cmd, $wifi_signal);
+              	else if($cmdLogicalId == 'status') $eqLogic->checkAndUpdateCmd($cmd, 'OK'); 
+    		}
+          
 			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
 		}
       return;
