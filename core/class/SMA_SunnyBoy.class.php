@@ -68,13 +68,7 @@ class SMA_SunnyBoy extends eqLogic {
 			self::$_eqLogics = self::byType(__CLASS__);
 		}
       	foreach (self::$_eqLogics as &$eqLogic) {
-			if ($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) {
-				continue;
-			}
-			if ($eqLogic->getIsEnable() == 0) {
-				$eqLogic->refresh();
-			}
-			if ($eqLogic->getIsEnable() == 0) {
+			if (($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) || $eqLogic->getIsEnable() == 0) {
 				continue;
 			}
 			try {
@@ -1312,9 +1306,6 @@ class SMA_SunnyBoy extends eqLogic {
 		if ($InverterKey == '') {
 			// LOGIN
         	$ch = curl_init();
-			$headers = array();
-			$headers[] = "Accept: application/json";
-			$headers[] = "Accept-Charset: UTF-8";
 			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -1349,9 +1340,6 @@ class SMA_SunnyBoy extends eqLogic {
           	//Get DC Data
           	if ($DeviceType==10 || $DeviceType==20) {
             	$ch = curl_init();
-				$headers = array();
-				$headers[] = "Accept: application/json";
-				$headers[] = "Accept-Charset: UTF-8";
 				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
