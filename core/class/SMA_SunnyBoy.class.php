@@ -25,6 +25,13 @@ class SMA_SunnyBoy extends eqLogic {
     /*     * ***********************Methode static*************************** */
 	private static $_eqLogics = null;
   
+  	public static function cronHourly() {
+    	$h = date('G');
+    	if($h == 2) { // Redemarrage du deamon a 2h du matin chaque jour cause fuite memoire
+			self::deamon_start();
+    	}
+  	}
+  
   	public static function deamon_info() {
 		$return = array();
 		$return['log'] = '';
