@@ -591,6 +591,21 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setOrder(31);              
 			}
 			$info->save();
+
+			$info = $this->getCmd(null, 'production');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('Production', __FILE__));
+				$info->setLogicalId('production');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('string');
+				$info->setIsHistorized(0);
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(32);              
+			}
+			$info->save();
         }
       
       	if ($DeviceType == 20) { //Onduleur Triphasé
@@ -1031,6 +1046,21 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setIsVisible(1);
 				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(31);              
+			}
+			$info->save();
+
+			$info = $this->getCmd(null, 'production');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('Production', __FILE__));
+				$info->setLogicalId('production');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('string');
+				$info->setIsHistorized(0);
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(32);              
 			}
 			$info->save();
 		}
@@ -1584,6 +1614,15 @@ class SMA_SunnyBoy extends eqLogic {
            	$power_l1 = round(floatval(($json['result'][$InverterKey]['6100_40464000'][$typeID]['0']['val'])/1),0);
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
+
+  			$status_general = $json['result'][$InverterKey]['6180_08214800'][$typeID]['0']['val']['0']['tag'];
+  			$status_inverter = $json['result'][$InverterKey]['6180_08414C00'][$typeID]['0']['val']['0']['tag'];
+  			$status_webconnect = $json['result'][$InverterKey]['6180_084B1E00'][$typeID]['0']['val']['0']['tag'];
+  			$status_fonction = $json['result'][$InverterKey]['6180_08412800'][$typeID]['0']['val']['0']['tag'];
+  			//$status_relais = $json['result'][$InverterKey]['6180_08416400'][$typeID]['0']['val']['0']['tag'];
+  			//log::add(__CLASS__, 'debug',"Etat_relais  $status_relais");     (51: Fermé; 311: Ouvert)
+
+
 			
          	foreach($eqLogic->getCmd('info') as $cmd) {
       			$cmdLogicalId = $cmd->getLogicalId();
@@ -1607,7 +1646,28 @@ class SMA_SunnyBoy extends eqLogic {
               	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'powerDC_A') $eqLogic->checkAndUpdateCmd($cmd, $powerDC_A);
               	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'powerDC_B') $eqLogic->checkAndUpdateCmd($cmd, $powerDC_B);
               	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'wifi_signal') $eqLogic->checkAndUpdateCmd($cmd, $wifi_signal);
-              	else if($cmdLogicalId == 'status') $eqLogic->checkAndUpdateCmd($cmd, 'OK'); 
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'production') {
+              		if ($status_fonction == '569') {
+              			$status_fonction = 'Active';
+              		} else if ($status_fonction == '1295') {
+              			$status_fonction = 'Veille';
+              		} else {
+              			$status_fonction = 'Inactive';
+              		}
+              		$eqLogic->checkAndUpdateCmd($cmd, $status_fonction);
+              	}
+              	else if($cmdLogicalId == 'status') {
+              		$status = '';
+              		if(($DeviceType==10 || $DeviceType==20)) {
+              			if ($status_general != '307') {$status = 'NOK Général';}
+              			else if (($status_inverter != '307') && ($status == '')) {$status = 'NOK Onduleur';}
+              			else if (($status_webconnect != '307') && ($status == '')) {$status = 'NOK WebConnect';}
+              			else {$status = 'OK';}
+              		} else {
+              			$status = 'OK';
+              		}
+              		$eqLogic->checkAndUpdateCmd($cmd, $status);
+              	} 
     		}
           
 			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
