@@ -36,6 +36,19 @@ function SMA_SunnyBoy_install() {
   	$cron->setDeamonSleepTime(config::byKey('pollInterval', 'SMA_SunnyBoy', 30));
   	$cron->save();
   	$cron->start();
+
+    $cron = cron::byClassAndFunction('SMA_SunnyBoy', 'dailyReset');
+    if (!is_object($cron)) {
+        $cron = new cron();
+        $cron->setClass('SMA_SunnyBoy');
+        $cron->setFunction('dailyReset');
+    }
+    $cron->setEnable(1);
+    $cron->setDeamon(0);
+    $cron->setSchedule('59 23 * * *');
+    $cron->setTimeout(10);
+    $cron->save();
+
 }
 
 function SMA_SunnyBoy_update() {
@@ -56,6 +69,19 @@ function SMA_SunnyBoy_update() {
   	$cron->setDeamonSleepTime(config::byKey('pollInterval', 'SMA_SunnyBoy', 30));
   	$cron->save();
   	$cron->start();
+
+    $cron = cron::byClassAndFunction('SMA_SunnyBoy', 'dailyReset');
+    if (!is_object($cron)) {
+        $cron = new cron();
+        $cron->setClass('SMA_SunnyBoy');
+        $cron->setFunction('dailyReset');
+    }
+    $cron->setEnable(1);
+    $cron->setDeamon(0);
+    $cron->setSchedule('59 23 * * *');
+    $cron->setTimeout(10);
+    $cron->save();
+
 }
 
 function SMA_SunnyBoy_remove() {
@@ -63,5 +89,16 @@ function SMA_SunnyBoy_remove() {
 	if (is_object($cron)) {
 		$cron->remove();
 	}
+
+	    try {
+        $crons = cron::searchClassAndFunction('SMA_SunnyBoy', 'dailyReset');
+        if (is_array($crons)) {
+            foreach ($crons as $cron) {
+                $cron->remove();
+            }
+        }
+    } catch (Exception $e) {
+    }
+
 }
 ?>

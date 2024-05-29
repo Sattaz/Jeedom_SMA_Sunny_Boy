@@ -75,9 +75,9 @@ class SMA_SunnyBoy extends eqLogic {
 			self::$_eqLogics = self::byType(__CLASS__);
 		}
       	foreach (self::$_eqLogics as &$eqLogic) {
-			if (($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) || $eqLogic->getIsEnable() == 0) {
-				continue;
-			}
+			//if (($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) || $eqLogic->getIsEnable() == 0) {
+			//	continue;
+			//}
 			try {
               	
               	$eqLogic->getSmaData($eqLogic);
@@ -97,8 +97,63 @@ class SMA_SunnyBoy extends eqLogic {
       	$mem1 = memory_get_usage();
       	log::add(__CLASS__, 'debug', "Memory Usage: ".($mem1-$mem0));
 	}
+
+	public static function cron() {
+		foreach (self::byType(__CLASS__, true) as $eqLogic) {
+			$currentPV = $eqLogic->getCmdInfoValue('pv_total', 0);
+
+			$dayPV = $eqLogic->getCmd('info', 'pv_day');
+			if (is_object($dayPV)) {
+				$dayIndex = $dayPV->getCache('index', 0);
+				if ($dayIndex == 0) {
+					$dayPV->setCache('index', $currentPV);
+					$dayIndex = $currentPV;
+				}
+				$dayPV->event(round($currentPV - $dayIndex, 3));
+			}
+			$monthPV = $eqLogic->getCmd('info', 'pv_month');
+			if (is_object($monthPV)) {
+				$monthIndex = $monthPV->getCache('index', 0);
+				if ($monthIndex == 0) {
+					$monthPV->setCache('index', $currentPV);
+					$monthIndex = $currentPV;
+				}
+				$monthPV->event(round($currentPV - $monthIndex, 3));
+			}
+		}
+	}
+
+
+	public static function dailyReset() {
+		foreach (self::byType(__CLASS__, true) as $eqLogic) {
+			$currentPV = $eqLogic->getCmdInfoValue('pv_total', 0);
+
+			$dayPV = $eqLogic->getCmd('info', 'pv_day');
+			if (is_object($dayPV)) {
+				$dayPV->setCache('index', $currentPV);
+			}
+
+			$date = new DateTime();
+			$lastDay = $date->format('Y-m-t');
+			$toDay = $date->format('Y-m-d');
+			if ($lastDay === $toDay) {
+				$monthPV = $eqLogic->getCmd('info', 'pv_month');
+				if (is_object($monthPV)) {
+					$monthPV->setCache('index', $currentPV);
+				}
+			}
+		}
+	}
+
+
     
     /*     * *********************Méthodes d'instance************************* */
+
+	public function getCmdInfoValue($logicalId, $default = '') {
+		$cmd = $this->getCmd(null, $logicalId);
+		if (!is_object($cmd)) return $default;
+		return $cmd->execCmd();
+	}
 
     public function preInsert() {
         
@@ -177,6 +232,11 @@ class SMA_SunnyBoy extends eqLogic {
           	if (is_object($action)) {$action->remove();}
 			$action = $this->getCmd(null, 'wifi_signal');
           	if (is_object($action)) {$action->remove();}
+			$action = $this->getCmd(null, 'pv_day');
+          	if (is_object($action)) {$action->remove();}
+			$action = $this->getCmd(null, 'pv_month');
+          	if (is_object($action)) {$action->remove();}
+
       	}
       
 		if ($DeviceType == 40) {//Suppression de toutes commandes sans rapport avec un Energy Meter Triphasé
@@ -199,6 +259,10 @@ class SMA_SunnyBoy extends eqLogic {
           	$action = $this->getCmd(null, 'powerDC_B');
           	if (is_object($action)) {$action->remove();}
 			$action = $this->getCmd(null, 'wifi_signal');
+          	if (is_object($action)) {$action->remove();}
+			$action = $this->getCmd(null, 'pv_day');
+          	if (is_object($action)) {$action->remove();}
+			$action = $this->getCmd(null, 'pv_month');
           	if (is_object($action)) {$action->remove();}
       	}
       
@@ -234,7 +298,8 @@ class SMA_SunnyBoy extends eqLogic {
           		$info->setConfiguration('historizeRound', 2);
 				$info->setIsHistorized(1);
 				$info->setUnite('Wh');
-              	$info->setOrder(2);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(2);
 			}
 			$info->save();
 		
@@ -252,6 +317,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 60);
 				$info->setIsHistorized(1);
 				$info->setUnite('Hz');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(3);              
 			}
 			$info->save();
@@ -270,6 +336,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(4);              
 			}
 			$info->save();
@@ -288,6 +355,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(5);              
 			}
 			$info->save();
@@ -306,6 +374,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(6);              
 			}
 			$info->save();
@@ -324,6 +393,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 1000);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(7);              
 			}
 			$info->save();
@@ -342,6 +412,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 1000);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(8);              
 			}
 			$info->save();
@@ -360,6 +431,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(9);              
 			}
 			$info->save();
@@ -378,6 +450,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(10);              
 			}
 			$info->save();
@@ -396,6 +469,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(11);              
 			}
 			$info->save();
@@ -414,6 +488,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(12);              
 			}
 			$info->save();
@@ -432,6 +507,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 100);
 				$info->setIsHistorized(1);
 				$info->setUnite('%');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(13);              
 			}
 			$info->save();
@@ -446,6 +522,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(14);              
 			}
 			$info->save();
@@ -460,6 +537,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(15);              
 			}
 			$info->save();
@@ -473,9 +551,61 @@ class SMA_SunnyBoy extends eqLogic {
 				$refresh->setType('action');
 				$refresh->setSubType('other');
     			$refresh->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$refresh->setOrder(50);              
 			}
 			$refresh->save();
+
+			$info = $this->getCmd(null, 'pv_day');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('PV Jour', __FILE__));
+				$info->setLogicalId('pv_day');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('numeric');
+				$info->setTemplate('dashboard','line');
+				$info->setTemplate('mobile','line');          
+				$info->setIsHistorized(0);
+				$info->setUnite('Wh');
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(30);              
+			}
+			$info->save();
+
+			$info = $this->getCmd(null, 'pv_month');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('PV Mois', __FILE__));
+				$info->setLogicalId('pv_month');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('numeric');
+				$info->setTemplate('dashboard','line');
+				$info->setTemplate('mobile','line');          
+				$info->setIsHistorized(0);
+				$info->setUnite('Wh');
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(31);              
+			}
+			$info->save();
+
+			$info = $this->getCmd(null, 'production');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('Production', __FILE__));
+				$info->setLogicalId('production');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('string');
+				$info->setIsHistorized(0);
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(32);              
+			}
+			$info->save();
         }
       
       	if ($DeviceType == 20) { //Onduleur Triphasé
@@ -493,6 +623,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', $this->getConfiguration("Power"));
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(1);              
 			}
 			$info->save();
@@ -510,6 +641,7 @@ class SMA_SunnyBoy extends eqLogic {
           		$info->setConfiguration('historizeRound', 2);
 				$info->setIsHistorized(1);
 				$info->setUnite('Wh');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(2);              
 			}
 			$info->save();
@@ -528,6 +660,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 60);
 				$info->setIsHistorized(1);
 				$info->setUnite('Hz');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(3);              
 			}
 			$info->save();
@@ -546,6 +679,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(4);              
 			}
 			$info->save();
@@ -564,6 +698,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(5);              
 			}
 			$info->save();
@@ -582,6 +717,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(6);              
 			}
 			$info->save();
@@ -600,6 +736,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(7);              
 			}
 			$info->save();
@@ -618,6 +755,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(8);              
 			}
 			$info->save();
@@ -636,6 +774,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(9);              
 			}
 			$info->save();
@@ -654,6 +793,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(10);              
 			}
 			$info->save();
@@ -672,6 +812,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(11);              
 			}
 			$info->save();
@@ -690,6 +831,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(12);              
 			}
 			$info->save();
@@ -708,6 +850,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 1000);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(13);              
 			}
 			$info->save();
@@ -726,6 +869,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 1000);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(14);              
 			}
 			$info->save();
@@ -744,6 +888,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(15);              
 			}
 			$info->save();
@@ -762,6 +907,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(16);              
 			}
 			$info->save();
@@ -780,6 +926,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(17);              
 			}
 			$info->save();
@@ -798,6 +945,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 10000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(18);              
 			}
 			$info->save();
@@ -816,6 +964,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 100);
 				$info->setIsHistorized(1);
 				$info->setUnite('%');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(19);              
 			}
 			$info->save();
@@ -830,6 +979,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(20);              
 			}
 			$info->save();
@@ -844,6 +994,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(21);              
 			}
 			$info->save();
@@ -857,9 +1008,61 @@ class SMA_SunnyBoy extends eqLogic {
 				$refresh->setType('action');
 				$refresh->setSubType('other');
     			$refresh->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$refresh->setOrder(50);              
 			}
 			$refresh->save();
+
+			$info = $this->getCmd(null, 'pv_day');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('PV Jour', __FILE__));
+				$info->setLogicalId('pv_day');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('numeric');
+				$info->setTemplate('dashboard','line');
+				$info->setTemplate('mobile','line');          
+				$info->setIsHistorized(0);
+				$info->setUnite('Wh');
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(30);              
+			}
+			$info->save();
+
+			$info = $this->getCmd(null, 'pv_month');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('PV Mois', __FILE__));
+				$info->setLogicalId('pv_month');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('numeric');
+				$info->setTemplate('dashboard','line');
+				$info->setTemplate('mobile','line');          
+				$info->setIsHistorized(0);
+				$info->setUnite('Wh');
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(31);              
+			}
+			$info->save();
+
+			$info = $this->getCmd(null, 'production');
+			if (!is_object($info)) {
+				$info = new SMA_SunnyBoyCmd();
+				$info->setName(__('Production', __FILE__));
+				$info->setLogicalId('production');
+				$info->setEqLogic_id($this->getId());
+				$info->setType('info');
+				$info->setSubType('string');
+				$info->setIsHistorized(0);
+				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
+				$info->setOrder(32);              
+			}
+			$info->save();
 		}
       
       	if ($DeviceType == 30) { //Energy Meter Monophasé
@@ -877,6 +1080,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 20000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(1);              
 			}
 			$info->save();
@@ -895,6 +1099,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(2);              
 			}
 			$info->save();
@@ -913,6 +1118,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(3);              
 			}
 			$info->save();
@@ -931,6 +1137,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 20000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(4);              
 			}
 			$info->save();
@@ -945,6 +1152,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(5);              
 			}
 			$info->save();
@@ -959,6 +1167,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(6);              
 			}
 			$info->save();
@@ -972,6 +1181,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$refresh->setType('action');
 				$refresh->setSubType('other');
     			$refresh->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$refresh->setOrder(50);              
 			}
 			$refresh->save();
@@ -992,6 +1202,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 20000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(1);              
 			}
 			$info->save();
@@ -1010,6 +1221,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(2);              
 			}
 			$info->save();
@@ -1028,6 +1240,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(3);              
 			}
 			$info->save();
@@ -1046,6 +1259,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 250);
 				$info->setIsHistorized(1);
 				$info->setUnite('V');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(4);              
 			}
 			$info->save();
@@ -1064,6 +1278,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(5);              
 			}
 			$info->save();
@@ -1082,6 +1297,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(6);              
 			}
 			$info->save();
@@ -1100,6 +1316,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 50);
 				$info->setIsHistorized(1);
 				$info->setUnite('A');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(7);              
 			}
 			$info->save();
@@ -1118,6 +1335,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 20000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(8);              
 			}
 			$info->save();
@@ -1136,6 +1354,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 20000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(9);              
 			}
 			$info->save();
@@ -1154,6 +1373,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setConfiguration('maxValue', 20000);
 				$info->setIsHistorized(1);
 				$info->setUnite('W');
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(10);              
 			}
 			$info->save();
@@ -1168,6 +1388,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(11);              
 			}
 			$info->save();
@@ -1182,6 +1403,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$info->setSubType('string');
 				$info->setIsHistorized(0);
 				$info->setIsVisible(1);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$info->setOrder(12);              
 			}
 			$info->save();
@@ -1195,6 +1417,7 @@ class SMA_SunnyBoy extends eqLogic {
 				$refresh->setType('action');
 				$refresh->setSubType('other');
     			$refresh->setIsVisible(0);
+				$info->setDisplay('forceReturnLineBefore', 1);
 				$refresh->setOrder(50);              
 			}
 			$refresh->save();
@@ -1391,6 +1614,15 @@ class SMA_SunnyBoy extends eqLogic {
            	$power_l1 = round(floatval(($json['result'][$InverterKey]['6100_40464000'][$typeID]['0']['val'])/1),0);
   			$power_l2 = round(floatval(($json['result'][$InverterKey]['6100_40464100'][$typeID]['0']['val'])/1),0);
   			$power_l3 = round(floatval(($json['result'][$InverterKey]['6100_40464200'][$typeID]['0']['val'])/1),0);
+
+  			$status_general = $json['result'][$InverterKey]['6180_08214800'][$typeID]['0']['val']['0']['tag'];
+  			$status_inverter = $json['result'][$InverterKey]['6180_08414C00'][$typeID]['0']['val']['0']['tag'];
+  			$status_webconnect = $json['result'][$InverterKey]['6180_084B1E00'][$typeID]['0']['val']['0']['tag'];
+  			$status_fonction = $json['result'][$InverterKey]['6180_08412800'][$typeID]['0']['val']['0']['tag'];
+  			//$status_relais = $json['result'][$InverterKey]['6180_08416400'][$typeID]['0']['val']['0']['tag'];
+  			//log::add(__CLASS__, 'debug',"Etat_relais  $status_relais");     (51: Fermé; 311: Ouvert)
+
+
 			
          	foreach($eqLogic->getCmd('info') as $cmd) {
       			$cmdLogicalId = $cmd->getLogicalId();
@@ -1414,7 +1646,28 @@ class SMA_SunnyBoy extends eqLogic {
               	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'powerDC_A') $eqLogic->checkAndUpdateCmd($cmd, $powerDC_A);
               	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'powerDC_B') $eqLogic->checkAndUpdateCmd($cmd, $powerDC_B);
               	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'wifi_signal') $eqLogic->checkAndUpdateCmd($cmd, $wifi_signal);
-              	else if($cmdLogicalId == 'status') $eqLogic->checkAndUpdateCmd($cmd, 'OK'); 
+              	else if(($DeviceType==10 || $DeviceType==20) && $cmdLogicalId == 'production') {
+              		if ($status_fonction == '569') {
+              			$status_fonction = 'Active';
+              		} else if ($status_fonction == '1295') {
+              			$status_fonction = 'Veille';
+              		} else {
+              			$status_fonction = 'Inactive';
+              		}
+              		$eqLogic->checkAndUpdateCmd($cmd, $status_fonction);
+              	}
+              	else if($cmdLogicalId == 'status') {
+              		$status = '';
+              		if(($DeviceType==10 || $DeviceType==20)) {
+              			if ($status_general != '307') {$status = 'NOK Général';}
+              			else if (($status_inverter != '307') && ($status == '')) {$status = 'NOK Onduleur';}
+              			else if (($status_webconnect != '307') && ($status == '')) {$status = 'NOK WebConnect';}
+              			else {$status = 'OK';}
+              		} else {
+              			$status = 'OK';
+              		}
+              		$eqLogic->checkAndUpdateCmd($cmd, $status);
+              	} 
     		}
           
 			log::add(__CLASS__, 'debug', $eqLogic->getHumanName().' -> All good: Session ID='.$SMA_SID.', Equipment Key ='.$InverterKey.' , Data='.$data);
