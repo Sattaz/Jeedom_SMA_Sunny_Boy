@@ -75,9 +75,9 @@ class SMA_SunnyBoy extends eqLogic {
 			self::$_eqLogics = self::byType(__CLASS__);
 		}
       	foreach (self::$_eqLogics as &$eqLogic) {
-			if (($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) || $eqLogic->getIsEnable() == 0) {
-				continue;
-			}
+			//if (($_eqLogic_id != null && $_eqLogic_id != $eqLogic->getId()) || $eqLogic->getIsEnable() == 0) {
+			//	continue;
+			//}
 			try {
               	
               	$eqLogic->getSmaData($eqLogic);
